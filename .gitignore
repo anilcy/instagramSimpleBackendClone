@@ -1,0 +1,17 @@
+# Rider ve VS Code files
+.idea/
+.vscode/
+
+# Mac and system files
+.DS_Store
+
+# .NET and C# projects
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+.env
+.env.local
