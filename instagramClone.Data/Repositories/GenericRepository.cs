@@ -6,10 +6,10 @@ namespace instagramClone.Data.Repositories;
 
 public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
-    private readonly DbContext _context;
+    private readonly InstagramDbContext _context;
     private readonly DbSet<T> _dbSet;
 
-    public GenericRepository(DbContext context)
+    public GenericRepository(InstagramDbContext context)
     {
         _context = context;
         _dbSet = context.Set<T>();

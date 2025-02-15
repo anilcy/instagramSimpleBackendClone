@@ -1,8 +1,6 @@
 using System.Linq.Expressions;
 using instagramClone.Business.Interfaces;
 using instagramClone.Data.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using DbContext = instagramClone.Data.DbContext;
 
 namespace instagramClone.Business.Services;
 

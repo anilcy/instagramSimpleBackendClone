@@ -1,41 +1,95 @@
+using DotNetEnv;
+using instagramClone.Business.Interfaces;
+using instagramClone.Business.Services;
+using instagramClone.Data;
+using instagramClone.Entities.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Npgsql;
+using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// services
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<UserManager<AppUser>>();
+builder.Services.AddScoped<SignInManager<AppUser>>();
+
+builder.Services.AddIdentity<AppUser, AppRole>()
+    .AddEntityFrameworkStores<InstagramDbContext>()
+    .AddDefaultTokenProviders();
+
+// load .env
+Env.Load();
+builder.Configuration.AddEnvironmentVariables();
+var connectionString = Env.GetString("DB_CONNECTION_STRING");
+Console.WriteLine($"🔹 JWT_KEY: {Env.GetString("JWT_KEY")}");
+Console.WriteLine($"🔹 JWT_ISSUER: {Env.GetString("JWT_ISSUER")}");
+Console.WriteLine($"🔹 JWT_AUDIENCE: {Env.GetString("JWT_AUDIENCE")}");
+
+// DbContext added to services
+builder.Services.AddDbContext<InstagramDbContext>(options =>
+    options.UseNpgsql(connectionString, b => b.MigrationsAssembly("instagramClone.Data")));
+
+var jwtKey = Env.GetString("JWT_KEY");
+var jwtIssuer = Env.GetString("JWT_ISSUER");
+var jwtAudience = Env.GetString("JWT_AUDIENCE");
+
+if (string.IsNullOrEmpty(jwtKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
+{
+    throw new Exception("⚠️ JWT yapılandırması eksik! Lütfen .env dosyanı kontrol et.");
+}
+
+var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = key
+        };
+    });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
 app.UseHttpsRedirection();
 
-var summaries = new[]
+// PostgreSQL connection test
+using (var conn = new NpgsqlConnection(connectionString))
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    conn.Open();
+    using (var cmd = new NpgsqlCommand("SELECT version()", conn))
+    {
+        var version = cmd.ExecuteScalar()?.ToString();
+        Console.WriteLine($"✅ PostgreSQL version: {version}");
+    }
 }
+
+// DbContext
+app.Services.CreateScope().ServiceProvider.GetRequiredService<InstagramDbContext>();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+// JWT Authentication
+app.UseAuthentication(); 
+app.UseAuthorization();
+
+app.MapControllers();
+app.Run();

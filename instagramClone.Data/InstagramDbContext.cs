@@ -4,11 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace instagramClone.Data;
 
-public class DbContext : IdentityDbContext<AppUser, AppRole, Guid>
+public class InstagramDbContext : IdentityDbContext<AppUser, AppRole, Guid>
 {
-    public DbContext(DbContextOptions<DbContext> options) : base(options)
+    public InstagramDbContext(DbContextOptions<InstagramDbContext> options) : base(options)
     {
-        
-        
     }
+
 }
