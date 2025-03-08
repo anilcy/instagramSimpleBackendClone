@@ -1,0 +1,452 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2761
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;\red153\green153\blue153;\red23\green23\blue23;\red70\green137\blue204;
+\red212\green212\blue212;\red66\green192\blue160;\red171\green208\blue146;\red140\green211\blue253;\red212\green214\blue153;
+\red72\green153\blue58;\red203\green139\blue114;\red207\green210\blue152;\red205\green138\blue215;\red167\green197\blue152;
+}
+{\*\expandedcolortbl;;\csgenericrgb\c60000\c60000\c60000;\csgenericrgb\c9020\c9020\c9020;\csgenericrgb\c27451\c53725\c80000;
+\csgenericrgb\c83137\c83137\c83137;\csgenericrgb\c25882\c75294\c62745;\csgenericrgb\c67059\c81569\c57255;\csgenericrgb\c54902\c82745\c99216;\csgenericrgb\c83137\c83922\c60000;
+\csgenericrgb\c28235\c60000\c22745;\csgenericrgb\c79608\c54510\c44706;\csgenericrgb\c81176\c82353\c59608;\csgenericrgb\c80392\c54118\c84314;\csgenericrgb\c65490\c77255\c59608;
+}
+\paperw11900\paperh16840\margl1440\margr1440\vieww29200\viewh18400\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs26 \cf2 \cb3 using Amazon.S3.Model;\
+\cf4 using \cf5 ClosedXML.Excel;\
+\cf4 using \cf5 ISGUNSAY_V2.Biz.Abstract;\
+\cf4 using \cf5 ISGUNSAY_V2.Data.Abstract;\
+\cf4 using \cf5 ISGUNSAY_V2.Entity.DbModels;\
+\cf4 using \cf6 Normal \cf5 = MathNet.Numerics.Distributions.\cf6 Normal\cf5 ;\
+\cf4 using \cf5 ISGUNSAY_V2.Entity.DTOs;\
+\cf2 using System.Linq;\
+\
+\cf4 namespace \cf5 ISGUNSAY_V2.Biz.Concrete\
+\cf2 \{\
+    \cf4 public class \cf6 HesaplamaService \cf5 : \cf7 IHesaplamaService\
+    \cf5 \{\
+        \cf4 private readonly \cf7 IFileService \cf5 _fileService;\
+        \cf4 private readonly \cf7 IRegionRepository \cf5 _regionRepository;\
+        \cf4 private readonly \cf7 IBolgeYontemRepository \cf5 _bolgeYontemRepository;\
+        \cf4 private readonly \cf7 IHesaplamaRepository \cf5 _hesaplamaRepository;\
+\
+        \cf4 public \cf6 HesaplamaService\cf5 (\
+            \cf7 IRegionRepository \cf8 regionRepository\cf5 ,\
+            \cf7 IBolgeYontemRepository \cf8 bolgeYontemRepository\cf5 , \cf7 IFileService \cf8 fileService\cf5 ,\
+            \cf7 IHesaplamaRepository \cf8 hesaplamaRepository\cf5 )\
+        \{\
+            _fileService = \cf8 fileService\cf5 ;\
+            _hesaplamaRepository = \cf8 hesaplamaRepository\cf5 ;\
+            _regionRepository = \cf8 regionRepository\cf5 ;\
+            _bolgeYontemRepository = \cf8 bolgeYontemRepository\cf5 ;\
+        \}\
+\
+        \cf4 public async \cf6 Task\cf5 <\cf6 HesaplamaResultDto\cf5 > \cf9 Hesaplama\cf5 (\cf6 HesaplamaRequestDto \cf8 request\cf5 )\
+        \{\
+            \cf4 var \cf8 bolgeYontem \cf5 = \cf4 await \cf5 _bolgeYontemRepository.\cf9 GetByIdAsync\cf5 (\cf8 request\cf5 .BolgeYontemId);\
+            \cf4 var \cf8 bolgeVerileri \cf5 = \cf4 await \cf5 _regionRepository.\cf9 GetByIdAsync\cf5 (\cf8 request\cf5 .BolgeId);\
+\
+            \cf10 // Excel dosyalar\uc0\u305 ndan Yagmur, Kar, Hava Sicakl\u305 \u287 \u305  ve Toprak Sicakl\u305 \u287 \u305  verilerini al\
+            \cf6 Stream\cf5 ? \cf8 karFileStream \cf5 =\
+                \cf4 await \cf5 _fileService.\cf9 DownloadFileAsync\cf5 (\cf8 request\cf5 .UserId, \cf8 request\cf5 .regionName, \cf11 "SnowFall"\cf5 ,\
+                    \cf8 request\cf5 .KarFileName);\
+            \cf6 Stream\cf5 ? \cf8 yagmurFileStream \cf5 =\
+                \cf4 await \cf5 _fileService.\cf9 DownloadFileAsync\cf5 (\cf8 request\cf5 .UserId, \cf8 request\cf5 .regionName, \cf11 "RainFall"\cf5 ,\
+                    \cf8 request\cf5 .YagmurFileName);\
+            \cf6 Stream\cf5 ? \cf8 havaSicakligiFileStream \cf5 =\
+                \cf4 await \cf5 _fileService.\cf9 DownloadFileAsync\cf5 (\cf8 request\cf5 .UserId, \cf8 request\cf5 .regionName, \cf11 "WeatherTemperature"\cf5 ,\
+                    \cf8 request\cf5 .HavaSicakligiFileName);\
+            \cf6 Stream\cf5 ? \cf8 toprakSicakligiFileStream \cf5 =\
+                \cf4 await \cf5 _fileService.\cf9 DownloadFileAsync\cf5 (\cf8 request\cf5 .UserId, \cf8 request\cf5 .regionName, \cf11 "SoilTemperature"\cf5 ,\
+                    \cf8 request\cf5 .ToprakSicakligiFileName);\
+\
+            \cf10 // ---------------------------------EXCEL VER\uc0\u304  OKUMA--------------------------------\
+            // (Excel okuma metodlar\uc0\u305  mevcut sisteminizde haz\u305 r oldu\u287 undan burada aynen b\u305 rak\u305 l\u305 yor.)\
+            \cf4 static double\cf5 [][] \cf9 ReadExcelData\cf5 (\cf6 Stream \cf8 fileStream\cf5 )\
+            \{\
+                \cf4 using \cf5 (\cf4 var \cf8 workbook \cf5 = \cf4 new \cf6 XLWorkbook\cf5 (\cf8 fileStream\cf5 ))\
+                \{\
+                    \cf4 var \cf8 ws \cf5 = \cf8 workbook\cf5 .Worksheets.\cf12 First\cf5 ();\
+                    \cf4 int \cf8 columnCount \cf5 = \cf8 ws\cf5 .\cf9 Rows\cf5 ().\cf12 First\cf5 ().\cf9 CellsUsed\cf5 ().\cf12 Count\cf5 ();\
+\
+                    \cf13 if \cf5 (\cf8 columnCount \cf5 == \cf14 6\cf5 )\
+                    \{\
+                        \cf13 return \cf9 ProcessDailyData\cf5 (\cf8 ws\cf5 );\
+                    \}\
+                    \cf2 else \cf13 if \cf5 (\cf8 columnCount \cf5 == \cf14 5\cf5 )\
+                    \{\
+                        \cf13 return \cf9 ProcessMonthlyData\cf5 (\cf8 ws\cf5 );\
+                    \}\
+                    \cf2 else\
+                    \cf5 \{\
+                        \cf13 throw \cf4 new \cf6 InvalidOperationException\cf5 (\cf11 "Invalid spreadsheet format. Expected 6 columns for daily data or 5 columns for monthly data."\cf5 );\
+                    \}\
+                \}\
+            \}\
+\
+            \cf4 static double\cf5 [][] \cf9 ProcessDailyData\cf5 (\cf7 IXLWorksheet \cf8 ws\cf5 )\
+            \{\
+                \cf4 int \cf9 CalculateDayOfYear\cf5 (\cf4 int \cf8 month\cf5 , \cf4 int \cf8 day\cf5 )\
+                \{\
+                    \cf4 int\cf5 [] \cf8 daysInMonths \cf5 = \{ \cf14 31\cf5 , \cf14 28\cf5 , \cf14 31\cf5 , \cf14 30\cf5 , \cf14 31\cf5 , \cf14 30\cf5 , \cf14 31\cf5 , \cf14 31\cf5 , \cf14 30\cf5 , \cf14 31\cf5 , \cf14 30\cf5 , \cf14 31 \cf5 \};\
+                    \cf13 if \cf5 (\cf8 month \cf5 < \cf14 1 \cf5 || \cf8 month \cf5 > \cf14 12 \cf5 || \cf8 day \cf5 < \cf14 1 \cf5 || \cf8 day \cf5 > \cf8 daysInMonths\cf5 [\cf8 month \cf5 - \cf14 1\cf5 ])\
+                    \{\
+                        \cf13 return \cf5 -\cf14 1\cf5 ;\
+                    \}\
+                    \cf13 return \cf8 daysInMonths\cf5 .\cf12 Take\cf5 (\cf8 month \cf5 - \cf14 1\cf5 ).\cf12 Sum\cf5 () + \cf8 day\cf5 ;\
+                \}\
+\
+                \cf4 var \cf8 dayToData \cf5 = \cf4 new \cf6 Dictionary\cf5 <\cf4 int\cf5 , \cf6 List\cf5 <\cf4 double\cf5 >>();\
+                \cf4 foreach \cf5 (\cf4 var \cf8 row \cf4 in \cf8 ws\cf5 .\cf9 RowsUsed\cf5 ().\cf12 Skip\cf5 (\cf14 1\cf5 ))\
+                \{\
+                    \cf4 int \cf2 year\cf5 , \cf8 month\cf5 , \cf8 day\cf5 ;\
+                    \cf4 double \cf8 dataValue\cf5 ;\
+                    \cf13 if \cf5 (!\cf8 row\cf5 .\cf9 Cell\cf5 (\cf14 3\cf5 ).\cf9 TryGetValue\cf5 (\cf4 out \cf8 year\cf5 ) ||\
+                        !\cf8 row\cf5 .\cf9 Cell\cf5 (\cf14 4\cf5 ).\cf9 TryGetValue\cf5 (\cf4 out \cf8 month\cf5 ) ||\
+                        !\cf8 row\cf5 .\cf9 Cell\cf5 (\cf14 5\cf5 ).\cf9 TryGetValue\cf5 (\cf4 out \cf8 day\cf5 ) ||\
+                        !\cf8 row\cf5 .\cf9 Cell\cf5 (\cf14 6\cf5 ).\cf9 TryGetValue\cf5 (\cf4 out \cf8 dataValue\cf5 ))\
+                    \{\
+                        \cf13 continue\cf5 ;\
+                    \}\
+                    \cf4 int \cf8 dayOfYear \cf5 = \cf9 CalculateDayOfYear\cf5 (\cf8 month\cf5 , \cf8 day\cf5 );\
+                    \cf13 if \cf5 (\cf8 dayOfYear \cf5 == -\cf14 1\cf5 )\
+                        \cf13 continue\cf5 ;\
+                    \cf13 if \cf5 (!\cf8 dayToData\cf5 .\cf9 ContainsKey\cf5 (\cf8 dayOfYear\cf5 ))\
+                        \cf8 dayToData\cf5 [\cf8 dayOfYear\cf5 ] = \cf4 new \cf6 List\cf5 <\cf4 double\cf5 >();\
+                    \cf8 dayToData\cf5 [\cf8 dayOfYear\cf5 ].\cf9 Add\cf5 (\cf8 dataValue\cf5 );\
+                \}\
+\
+                \cf4 double\cf5 [][] \cf8 dataArray \cf5 = \cf4 new double\cf5 [\cf14 365\cf5 ][];\
+                \cf13 for \cf5 (\cf4 int \cf8 day \cf5 = \cf14 1\cf5 ; \cf8 day \cf5 <= \cf14 365\cf5 ; \cf8 day\cf5 ++)\
+                    \cf8 dataArray\cf5 [\cf8 day \cf5 - \cf14 1\cf5 ] = \cf8 dayToData\cf5 .\cf9 ContainsKey\cf5 (\cf8 day\cf5 ) ? \cf8 dayToData\cf5 [\cf8 day\cf5 ].\cf9 ToArray\cf5 () : \cf4 new double\cf5 [\cf14 0\cf5 ];\
+                \cf13 return \cf8 dataArray\cf5 ;\
+            \}\
+\
+            \cf4 static double\cf5 [][] \cf9 ProcessMonthlyData\cf5 (\cf7 IXLWorksheet \cf8 ws\cf5 )\
+            \{\
+                \cf4 var \cf8 monthToData \cf5 = \cf4 new \cf6 Dictionary\cf5 <\cf4 int\cf5 , \cf6 List\cf5 <\cf4 double\cf5 >>();\
+                \cf4 foreach \cf5 (\cf4 var \cf8 row \cf4 in \cf8 ws\cf5 .\cf9 RowsUsed\cf5 ().\cf12 Skip\cf5 (\cf14 1\cf5 ))\
+                \{\
+                    \cf4 int \cf2 year\cf5 , \cf8 month\cf5 ;\
+                    \cf4 double \cf8 dataValue\cf5 ;\
+                    \cf13 if \cf5 (!\cf8 row\cf5 .\cf9 Cell\cf5 (\cf14 3\cf5 ).\cf9 TryGetValue\cf5 (\cf4 out \cf8 year\cf5 ) ||\
+                        !\cf8 row\cf5 .\cf9 Cell\cf5 (\cf14 4\cf5 ).\cf9 TryGetValue\cf5 (\cf4 out \cf8 month\cf5 ) ||\
+                        !\cf8 row\cf5 .\cf9 Cell\cf5 (\cf14 5\cf5 ).\cf9 TryGetValue\cf5 (\cf4 out \cf8 dataValue\cf5 ))\
+                    \{\
+                        \cf13 continue\cf5 ;\
+                    \}\
+                    \cf13 if \cf5 (\cf8 month \cf5 < \cf14 1 \cf5 || \cf8 month \cf5 > \cf14 12\cf5 )\
+                        \cf13 continue\cf5 ;\
+                    \cf13 if \cf5 (!\cf8 monthToData\cf5 .\cf9 ContainsKey\cf5 (\cf8 month\cf5 ))\
+                        \cf8 monthToData\cf5 [\cf8 month\cf5 ] = \cf4 new \cf6 List\cf5 <\cf4 double\cf5 >();\
+                    \cf8 monthToData\cf5 [\cf8 month\cf5 ].\cf9 Add\cf5 (\cf8 dataValue\cf5 );\
+                \}\
+                \cf4 double\cf5 [][] \cf8 dataArray \cf5 = \cf4 new double\cf5 [\cf14 12\cf5 ][];\
+                \cf13 for \cf5 (\cf4 int \cf8 month \cf5 = \cf14 1\cf5 ; \cf8 month \cf5 <= \cf14 12\cf5 ; \cf8 month\cf5 ++)\
+                    \cf8 dataArray\cf5 [\cf8 month \cf5 - \cf14 1\cf5 ] = \cf8 monthToData\cf5 .\cf9 ContainsKey\cf5 (\cf8 month\cf5 ) ? \cf8 monthToData\cf5 [\cf8 month\cf5 ].\cf9 ToArray\cf5 () : \cf4 new double\cf5 [\cf14 0\cf5 ];\
+                \cf13 return \cf8 dataArray\cf5 ;\
+            \}\
+\
+            \cf10 // Verileri oku\
+            \cf4 var \cf8 rain_array \cf5 = \cf9 ReadExcelData\cf5 (\cf8 yagmurFileStream\cf5 );\
+            \cf4 var \cf8 snow_array \cf5 = \cf9 ReadExcelData\cf5 (\cf8 karFileStream\cf5 );\
+            \cf4 var \cf8 soil_temperature_array \cf5 = \cf9 ReadExcelData\cf5 (\cf8 toprakSicakligiFileStream\cf5 );\
+            \cf4 var \cf8 temperature_index_array \cf5 = \cf9 ReadExcelData\cf5 (\cf8 havaSicakligiFileStream\cf5 );\
+\
+            \cf10 // Genel ortalamalar\
+            \cf4 double \cf8 yagmur_genel_ortalama \cf5 = \cf8 rain_array\cf5 .\cf12 SelectMany\cf5 (\cf8 row \cf5 => \cf8 row\cf5 ).\cf12 Average\cf5 ();\
+            \cf4 double \cf8 kar_genel_ortalama \cf5 = \cf8 snow_array\cf5 .\cf12 SelectMany\cf5 (\cf8 row \cf5 => \cf8 row\cf5 ).\cf12 Average\cf5 ();\
+            \cf4 double \cf8 toprak_sicakligi_genel_ortalama \cf5 = \cf8 soil_temperature_array\cf5 .\cf12 SelectMany\cf5 (\cf8 row \cf5 => \cf8 row\cf5 ).\cf12 Average\cf5 ();\
+\
+            \cf10 // Hava s\uc0\u305 cakl\u305 \u287 \u305  hesaplamas\u305  (ayl\u305 k ortalama s\u305 cakl\u305 klar)\
+            \cf4 int \cf8 rows \cf5 = \cf8 temperature_index_array\cf5 .Length;  \cf10 // \'d6rne\uc0\u287 in 12\
+            \cf4 double\cf5 [] \cf8 ortalama_sicakliklar \cf5 = \cf4 new double\cf5 [\cf8 rows\cf5 ];\
+            \cf13 for \cf5 (\cf4 int \cf8 i \cf5 = \cf14 0\cf5 ; \cf8 i \cf5 < \cf8 rows\cf5 ; \cf8 i\cf5 ++)\
+            \{\
+                \cf4 double \cf8 sum \cf5 = \cf8 temperature_index_array\cf5 [\cf8 i\cf5 ].\cf12 Sum\cf5 ();\
+                \cf8 ortalama_sicakliklar\cf5 [\cf8 i\cf5 ] = \cf8 sum \cf5 / \cf8 temperature_index_array\cf5 [\cf8 i\cf5 ].Length;\
+            \}\
+\
+            \cf10 // G\'fcnl\'fck ortalama hesaplamalar\uc0\u305  (ya\u287 mur, kar, toprak s\u305 cakl\u305 \u287 \u305 )\
+            \cf4 double\cf5 [] \cf8 yagmur_ortalama \cf5 = \cf8 rain_array\cf5 .\cf12 Select\cf5 (\cf8 row \cf5 => \cf8 row\cf5 .Length > \cf14 0 \cf5 ? \cf8 row\cf5 .\cf12 Average\cf5 () : \cf14 0\cf5 ).\cf12 ToArray\cf5 ();\
+            \cf4 double\cf5 [] \cf8 kar_ortalama \cf5 = \cf8 snow_array\cf5 .\cf12 Select\cf5 (\cf8 row \cf5 => \cf8 row\cf5 .Length > \cf14 0 \cf5 ? \cf8 row\cf5 .\cf12 Average\cf5 () : \cf14 0\cf5 ).\cf12 ToArray\cf5 ();\
+            \cf4 double\cf5 [] \cf8 toprak_sicakligi_ortalama \cf5 = \cf8 soil_temperature_array\cf5 .\cf12 Select\cf5 (\cf8 row \cf5 => \cf8 row\cf5 .Length > \cf14 0 \cf5 ? \cf8 row\cf5 .\cf12 Average\cf5 () : \cf14 0\cf5 ).\cf12 ToArray\cf5 ();\
+\
+            \cf10 // Standart sapma hesaplamalar\uc0\u305 \
+            \cf4 double\cf5 [] \cf8 yagmur_std \cf5 = \cf8 rain_array\cf5 .\cf12 Select\cf5 (\cf8 row \cf5 => \cf8 row\cf5 .Length > \cf14 0 \cf5 ? \cf6 Math\cf5 .\cf9 Sqrt\cf5 (\cf8 row\cf5 .\cf12 Average\cf5 (\cf8 val \cf5 => \cf6 Math\cf5 .\cf9 Pow\cf5 (\cf8 val \cf5 - \cf8 row\cf5 .\cf12 Average\cf5 (), \cf14 2\cf5 ))) : \cf14 0\cf5 ).\cf12 ToArray\cf5 ();\
+            \cf4 double\cf5 [] \cf8 kar_std \cf5 = \cf8 snow_array\cf5 .\cf12 Select\cf5 (\cf8 row \cf5 => \cf8 row\cf5 .Length > \cf14 0 \cf5 ? \cf6 Math\cf5 .\cf9 Sqrt\cf5 (\cf8 row\cf5 .\cf12 Average\cf5 (\cf8 val \cf5 => \cf6 Math\cf5 .\cf9 Pow\cf5 (\cf8 val \cf5 - \cf8 row\cf5 .\cf12 Average\cf5 (), \cf14 2\cf5 ))) : \cf14 0\cf5 ).\cf12 ToArray\cf5 ();\
+            \cf4 double\cf5 [] \cf8 toprak_sicakligi_std \cf5 = \cf8 soil_temperature_array\cf5 .\cf12 Select\cf5 (\cf8 row \cf5 => \cf8 row\cf5 .Length > \cf14 0 \cf5 ? \cf6 Math\cf5 .\cf9 Sqrt\cf5 (\cf8 row\cf5 .\cf12 Average\cf5 (\cf8 val \cf5 => \cf6 Math\cf5 .\cf9 Pow\cf5 (\cf8 val \cf5 - \cf8 row\cf5 .\cf12 Average\cf5 (), \cf14 2\cf5 ))) : \cf14 0\cf5 ).\cf12 ToArray\cf5 ();\
+\
+            \cf10 // -------------------------------------S\uc0\u304 M\'dcLASYON----------------------------------\
+            \cf4 int \cf8 n \cf5 = \cf8 rain_array\cf5 .Length;\
+            \cf4 int \cf8 simCount \cf5 = \cf14 1000\cf5 ; \cf10 // Sim\'fclasyon \'f6rne\uc0\u287 i say\u305 s\u305 \
+\
+            // Ya\uc0\u287 mur ve Kar i\'e7in sim\'fclasyon\
+            \cf4 double\cf5 [][] \cf8 dagilim_yagmur \cf5 = \cf4 new double\cf5 [\cf8 n\cf5 ][];\
+            \cf4 double\cf5 [][] \cf8 dagilim_kar \cf5 = \cf4 new double\cf5 [\cf8 n\cf5 ][];\
+            \cf13 for \cf5 (\cf4 int \cf8 i \cf5 = \cf14 0\cf5 ; \cf8 i \cf5 < \cf8 n\cf5 ; \cf8 i\cf5 ++)\
+            \{\
+                \cf8 dagilim_yagmur\cf5 [\cf8 i\cf5 ] = \cf4 new double\cf5 [\cf8 simCount\cf5 ];\
+                \cf8 dagilim_kar\cf5 [\cf8 i\cf5 ] = \cf4 new double\cf5 [\cf8 simCount\cf5 ];\
+                \cf13 for \cf5 (\cf4 int \cf8 j \cf5 = \cf14 0\cf5 ; \cf8 j \cf5 < \cf8 simCount\cf5 ; \cf8 j\cf5 ++)\
+                \{\
+                    \cf8 dagilim_yagmur\cf5 [\cf8 i\cf5 ][\cf8 j\cf5 ] = \cf6 Normal\cf5 .\cf9 Sample\cf5 (\cf8 yagmur_ortalama\cf5 [\cf8 i\cf5 ], \cf8 yagmur_std\cf5 [\cf8 i\cf5 ]);\
+                    \cf8 dagilim_kar\cf5 [\cf8 i\cf5 ][\cf8 j\cf5 ] = \cf6 Normal\cf5 .\cf9 Sample\cf5 (\cf8 kar_ortalama\cf5 [\cf8 i\cf5 ], \cf8 kar_std\cf5 [\cf8 i\cf5 ]);\
+                \}\
+            \}\
+\
+            \cf10 // EK: Toprak S\uc0\u305 cakl\u305 \u287 \u305  i\'e7in sim\'fclasyon\
+            \cf4 double\cf5 [][] \cf8 dagilim_toprak_sicaklik \cf5 = \cf4 new double\cf5 [\cf8 n\cf5 ][];\
+            \cf13 for \cf5 (\cf4 int \cf8 i \cf5 = \cf14 0\cf5 ; \cf8 i \cf5 < \cf8 n\cf5 ; \cf8 i\cf5 ++)\
+            \{\
+                \cf8 dagilim_toprak_sicaklik\cf5 [\cf8 i\cf5 ] = \cf4 new double\cf5 [\cf8 simCount\cf5 ];\
+                \cf13 for \cf5 (\cf4 int \cf8 j \cf5 = \cf14 0\cf5 ; \cf8 j \cf5 < \cf8 simCount\cf5 ; \cf8 j\cf5 ++)\
+                \{\
+                    \cf8 dagilim_toprak_sicaklik\cf5 [\cf8 i\cf5 ][\cf8 j\cf5 ] = \cf6 Normal\cf5 .\cf9 Sample\cf5 (\cf8 toprak_sicakligi_ortalama\cf5 [\cf8 i\cf5 ], \cf8 toprak_sicakligi_std\cf5 [\cf8 i\cf5 ]);\
+                \}\
+            \}\
+\
+            \cf10 // Toprak t\'fcrleri tan\uc0\u305 mlamalar\u305  ve b\'f6lge verilerinin haz\u305 rlanmas\u305  (de\u287 i\u351 medi)\
+            \cf4 double\cf5 [] \cf8 bolgeToprakTuru \cf5 = \{\
+                \cf6 Convert\cf5 .\cf9 ToDouble\cf5 (\cf8 bolgeVerileri\cf5 .ToprakProfilDerinli\uc0\u287 i),\
+                \cf6 Convert\cf5 .\cf9 ToDouble\cf5 (\cf8 bolgeVerileri\cf5 .ToprakOzgulAgirligi),\
+                \cf6 Convert\cf5 .\cf9 ToDouble\cf5 (\cf8 bolgeVerileri\cf5 .SolmaNoktasiDerinli\uc0\u287 i),\
+                \cf6 Convert\cf5 .\cf9 ToDouble\cf5 (\cf8 bolgeVerileri\cf5 .TarlaKapasitesindekiToprakNemi),\
+                \cf6 Convert\cf5 .\cf9 ToDouble\cf5 (\cf8 bolgeVerileri\cf5 .DoymaNoktasindakiToprakNemi),\
+                \cf6 Convert\cf5 .\cf9 ToDouble\cf5 (\cf8 bolgeVerileri\cf5 .TarlaKapasitesindekiHidrolikGecirgenlik),\
+                \cf6 Convert\cf5 .\cf9 ToDouble\cf5 (\cf8 bolgeVerileri\cf5 .DoymaNoktasindakiHidrolikGecirgenlik)\
+            \};\
+            \cf4 double\cf5 [] \cf8 secilen_toprak_turu \cf5 = \cf8 bolgeToprakTuru\cf5 ;\
+\
+            \cf10 // ----------------------------------SICAKLIK ENDEKS\uc0\u304  HESAPLAMA--------------------------------\
+            \cf4 double\cf5 [] \cf8 aylik_sicaklik_endeksi \cf5 = \cf8 ortalama_sicakliklar\
+                \cf5 .\cf12 Select\cf5 (\cf8 temp \cf5 => \cf8 temp \cf5 >= \cf14 0 \cf5 ? \cf6 Math\cf5 .\cf9 Pow\cf5 (\cf8 temp \cf5 / \cf14 5\cf5 , \cf14 1.514\cf5 ) : \cf14 0\cf5 )\
+                .\cf12 ToArray\cf5 ();\
+            \cf4 double \cf8 yillik_sicaklik_endeksi \cf5 = \cf8 aylik_sicaklik_endeksi\cf5 .\cf12 Sum\cf5 ();\
+            \cf4 double \cf8 beta \cf5 = (\cf14 0.675 \cf5 * \cf6 Math\cf5 .\cf9 Pow\cf5 (\cf8 yillik_sicaklik_endeksi\cf5 , \cf14 3\cf5 )\
+                           - \cf14 77.1 \cf5 * \cf6 Math\cf5 .\cf9 Pow\cf5 (\cf8 yillik_sicaklik_endeksi\cf5 , \cf14 2\cf5 )\
+                           + \cf14 17900 \cf5 * \cf8 yillik_sicaklik_endeksi\
+                           \cf5 + \cf14 492000\cf5 ) * \cf14 1e-6\cf5 ;\
+\
+            \cf10 // ---------------------------------------EVAPOTRANSP\uc0\u304 RASYON---------------------------------\
+            \cf4 double\cf5 [] \cf8 evapotranspirasyon \cf5 = \cf8 ortalama_sicakliklar\
+                \cf5 .\cf12 Select\cf5 (\cf8 temp \cf5 => \cf14 16 \cf5 * \cf6 Math\cf5 .\cf9 Pow\cf5 (\cf14 10 \cf5 * \cf6 Math\cf5 .\cf9 Max\cf5 (\cf8 temp\cf5 , \cf14 0\cf5 ) / \cf8 yillik_sicaklik_endeksi\cf5 , \cf8 beta\cf5 ))\
+                .\cf12 ToArray\cf5 ();\
+\
+            \cf4 int\cf5 [] \cf8 gun_sayilari \cf5 = \{ \cf14 31\cf5 , \cf14 28\cf5 , \cf14 31\cf5 , \cf14 30\cf5 , \cf14 31\cf5 , \cf14 30\cf5 , \cf14 31\cf5 , \cf14 31\cf5 , \cf14 30\cf5 , \cf14 31\cf5 , \cf14 30\cf5 , \cf14 31 \cf5 \};\
+            \cf4 double\cf5 [] \cf8 evapotranspirasyon_gunluk \cf5 = \cf8 evapotranspirasyon\
+                \cf5 .\cf12 Zip\cf5 (\cf8 gun_sayilari\cf5 , (\cf8 evap\cf5 , \cf8 gun\cf5 ) => \cf6 Enumerable\cf5 .\cf9 Repeat\cf5 (\cf8 evap \cf5 / \cf8 gun\cf5 , \cf8 gun\cf5 ).\cf12 ToArray\cf5 ())\
+                .\cf12 SelectMany\cf5 (\cf8 arr \cf5 => \cf8 arr\cf5 )\
+                .\cf12 ToArray\cf5 ();\
+\
+            \cf10 // ------------------------------------------DRENAJ--------------------------------------\
+            \cf4 double\cf5 [][] \cf8 toprak_nemi_degerleri \cf5 = \cf4 new double\cf5 [\cf8 n\cf5 ][];\
+            \cf4 double \cf8 ortalama_toprak_nemi \cf5 = \cf8 secilen_toprak_turu\cf5 [\cf14 3\cf5 ];\
+            \cf4 double\cf5 [,] \cf8 yagis \cf5 = \cf4 new double\cf5 [\cf8 n\cf5 , \cf8 simCount\cf5 ];\
+            \cf4 double \cf8 alfa \cf5 = (\cf6 Math\cf5 .\cf9 Log\cf5 (\cf8 secilen_toprak_turu\cf5 [\cf14 6\cf5 ]) - \cf6 Math\cf5 .\cf9 Log\cf5 (\cf8 secilen_toprak_turu\cf5 [\cf14 5\cf5 ])) /\
+                          (\cf6 Math\cf5 .\cf9 Log\cf5 (\cf8 secilen_toprak_turu\cf5 [\cf14 4\cf5 ]) - \cf6 Math\cf5 .\cf9 Log\cf5 (\cf8 secilen_toprak_turu\cf5 [\cf14 2\cf5 ]));\
+\
+            \cf13 for \cf5 (\cf4 int \cf8 i \cf5 = \cf14 0\cf5 ; \cf8 i \cf5 < \cf8 n\cf5 ; \cf8 i\cf5 ++)\
+            \{\
+                \cf8 toprak_nemi_degerleri\cf5 [\cf8 i\cf5 ] = \cf4 new double\cf5 [\cf8 simCount\cf5 ];\
+                \cf13 for \cf5 (\cf4 int \cf8 j \cf5 = \cf14 0\cf5 ; \cf8 j \cf5 < \cf8 simCount\cf5 ; \cf8 j\cf5 ++)\
+                \{\
+                    \cf10 // Ya\uc0\u287 mur ve kar sim\'fclasyonlar\u305 n\u305 n birle\u351 imi\
+                    \cf8 yagis\cf5 [\cf8 i\cf5 , \cf8 j\cf5 ] = \cf6 Math\cf5 .\cf9 Max\cf5 (\cf8 dagilim_yagmur\cf5 [\cf8 i\cf5 ][\cf8 j\cf5 ], \cf14 0\cf5 ) + \cf6 Math\cf5 .\cf9 Max\cf5 (\cf8 dagilim_kar\cf5 [\cf8 i\cf5 ][\cf8 j\cf5 ], \cf14 0\cf5 );\
+\
+                    \cf4 double \cf8 onceki_toprak_nemi_endeksi \cf5 = (\cf8 ortalama_toprak_nemi \cf5 - \cf8 secilen_toprak_turu\cf5 [\cf14 1\cf5 ]) /\
+                                                        (\cf8 secilen_toprak_turu\cf5 [\cf14 4\cf5 ] - \cf8 secilen_toprak_turu\cf5 [\cf14 1\cf5 ]);\
+\
+                    \cf10 // Y\'fczey ak\uc0\u305 \u351 \u305  hesaplamas\u305  (b\'f6lme s\u305 f\u305 r kontrol\'fc ile)\
+                    \cf4 double \cf8 payda \cf5 = \cf2 (\cf8 yagis\cf5 [\cf8 i\cf5 , \cf8 j\cf5 ] + \cf14 529 \cf5 - \cf14 2.44 \cf5 * \cf8 onceki_toprak_nemi_endeksi\cf2 )\cf5 ;\
+                    \cf4 double \cf8 yuzey_akisi \cf5 = \cf14 0\cf5 ;\
+                    \cf13 if \cf5 (\cf6 Math\cf5 .\cf9 Abs\cf5 (\cf8 payda\cf5 ) > \cf14 1e-12\cf5 )\
+                    \{\
+                        \cf8 yuzey_akisi \cf5 = \cf8 yagis\cf5 [\cf8 i\cf5 , \cf8 j\cf5 ] - \cf2 (\cf5 (\cf14 615 \cf5 - \cf14 2.85 \cf5 * \cf8 onceki_toprak_nemi_endeksi\cf5 ) / \cf8 payda\cf2 )\cf5 ;\
+                    \}\
+\
+                    \cf10 // Drenaj hesaplamas\uc0\u305  (b\'f6lme kontrol\'fc eklenmi\u351 tir)\
+                    \cf4 double \cf8 drenaj \cf5 = \cf14 0\cf5 ;\
+                    \cf13 if \cf5 (\cf6 Math\cf5 .\cf9 Abs\cf5 (\cf8 secilen_toprak_turu\cf5 [\cf14 2\cf5 ]) > \cf14 1e-12\cf5 )\
+                    \{\
+                        \cf8 drenaj \cf5 = \cf8 secilen_toprak_turu\cf5 [\cf14 5\cf5 ] * \cf6 Math\cf5 .\cf9 Pow\cf5 (\cf8 ortalama_toprak_nemi \cf5 / \cf8 secilen_toprak_turu\cf5 [\cf14 2\cf5 ], \cf8 alfa\cf5 );\
+                    \}\
+\
+                    \cf10 // Toprak nemi hesaplamas\uc0\u305 \
+                    \cf4 double \cf8 toprak_nemi \cf5 = \cf8 ortalama_toprak_nemi \cf5 + \cf8 yagis\cf5 [\cf8 i\cf5 , \cf8 j\cf5 ] - \cf8 yuzey_akisi \cf5 - \cf8 drenaj \cf5 -\
+                                         \cf8 evapotranspirasyon_gunluk\cf5 [\cf8 i \cf5 % \cf14 365\cf5 ];\
+                    \cf10 // S\uc0\u305 n\u305 rland\u305 rma\
+                    \cf8 toprak_nemi \cf5 = \cf6 Math\cf5 .\cf9 Max\cf5 (\cf8 secilen_toprak_turu\cf5 [\cf14 1\cf5 ], \cf6 Math\cf5 .\cf9 Min\cf5 (\cf8 toprak_nemi\cf5 , \cf8 secilen_toprak_turu\cf5 [\cf14 4\cf5 ]));\
+                    \cf8 toprak_nemi_degerleri\cf5 [\cf8 i\cf5 ][\cf8 j\cf5 ] = \cf8 toprak_nemi\cf5 ;\
+                \}\
+                \cf10 // G\'fcnl\'fck ortalama toprak nemi g\'fcncellemesi\
+                \cf8 ortalama_toprak_nemi \cf5 = \cf8 toprak_nemi_degerleri\cf5 [\cf8 i\cf5 ].\cf12 Average\cf5 ();\
+            \}\
+\
+            \cf10 //---------------------------\'c7ALI\uc0\u350 ILAB\u304 L\u304 R G\'dcN HESAPLAMA---------------------------\
+            // Mevcut \'fc\'e7 kriter: toprak nemi, kar, ya\uc0\u287 mur\
+            \cf4 int \cf8 calisilabilir_limit_nem \cf5 = (\cf4 int\cf5 )\cf8 bolgeYontem\cf5 .CalisilabilirMaksimumToprakNemi;\
+            \cf4 int \cf8 calisilabilir_limit_kar \cf5 = (\cf4 int\cf5 )\cf8 bolgeYontem\cf5 .CalisilabilirMaksimumKarYuksekligi;\
+            \cf4 int \cf8 calisilabilir_limit_yagmur \cf5 = (\cf4 int\cf5 )\cf8 bolgeYontem\cf5 .CalisilabilirMinimumToprakSicakligi;\
+\
+            \cf4 int\cf5 [][] \cf8 calisilabilir_gun \cf5 = \cf8 toprak_nemi_degerleri\
+                \cf5 .\cf12 Select\cf5 (\cf8 row \cf5 => \cf8 row\cf5 .\cf12 Select\cf5 (\cf8 val \cf5 => \cf8 val \cf5 <= \cf8 calisilabilir_limit_nem \cf5 ? \cf14 1 \cf5 : \cf14 0\cf5 ).\cf12 ToArray\cf5 ())\
+                .\cf12 ToArray\cf5 ();\
+            \cf4 int\cf5 [][] \cf8 calisilabilir_gun_kar \cf5 = \cf8 dagilim_kar\
+                \cf5 .\cf12 Select\cf5 (\cf8 row \cf5 => \cf8 row\cf5 .\cf12 Select\cf5 (\cf8 val \cf5 => \cf8 val \cf5 <= \cf8 calisilabilir_limit_kar \cf5 ? \cf14 1 \cf5 : \cf14 0\cf5 ).\cf12 ToArray\cf5 ())\
+                .\cf12 ToArray\cf5 ();\
+            \cf4 int\cf5 [][] \cf8 calisilabilir_gun_yagmur \cf5 = \cf8 dagilim_yagmur\
+                \cf5 .\cf12 Select\cf5 (\cf8 row \cf5 => \cf8 row\cf5 .\cf12 Select\cf5 (\cf8 val \cf5 => \cf8 val \cf5 <= \cf8 calisilabilir_limit_yagmur \cf5 ? \cf14 1 \cf5 : \cf14 0\cf5 ).\cf12 ToArray\cf5 ())\
+                .\cf12 ToArray\cf5 ();\
+\
+            \cf10 // EK: Toprak s\uc0\u305 cakl\u305 \u287 \u305  i\'e7in ek \'e7al\u305 \u351 ma \u351 art\u305  (\'f6rne\u287 in, s\u305 cakl\u305 k > 10\'b0C olmal\u305 )\
+            \cf4 double \cf8 limitToprakSicaklik \cf5 = \cf14 10.0\cf5 ;\
+            \cf4 int\cf5 [][] \cf8 calisilabilir_gun_sicaklik \cf5 = \cf8 dagilim_toprak_sicaklik\
+                \cf5 .\cf12 Select\cf5 (\cf8 row \cf5 => \cf8 row\cf5 .\cf12 Select\cf5 (\cf8 val \cf5 => \cf8 val \cf5 > \cf8 limitToprakSicaklik \cf5 ? \cf14 1 \cf5 : \cf14 0\cf5 ).\cf12 ToArray\cf5 ())\
+                .\cf12 ToArray\cf5 ();\
+\
+            \cf10 // T\'fcm kriterlerin birlikte kontrol\'fc (AND operat\'f6r\'fc)\
+            \cf4 int\cf5 [][] \cf8 calisma_durumu \cf5 = \cf8 calisilabilir_gun\
+                \cf5 .\cf12 Zip\cf5 (\cf8 calisilabilir_gun_kar\cf5 , (\cf8 a\cf5 , \cf8 b\cf5 ) => \cf8 a\cf5 .\cf12 Zip\cf5 (\cf8 b\cf5 , (\cf8 x\cf5 , \cf8 y\cf5 ) => \cf8 x \cf5 & \cf8 y\cf5 ).\cf12 ToArray\cf5 ())\
+                .\cf12 Zip\cf5 (\cf8 calisilabilir_gun_yagmur\cf5 , (\cf8 ab\cf5 , \cf8 c\cf5 ) => \cf8 ab\cf5 .\cf12 Zip\cf5 (\cf8 c\cf5 , (\cf8 x\cf5 , \cf8 y\cf5 ) => \cf8 x \cf5 & \cf8 y\cf5 ).\cf12 ToArray\cf5 ())\
+                .\cf12 Zip\cf5 (\cf8 calisilabilir_gun_sicaklik\cf5 , (\cf8 abc\cf5 , \cf8 d\cf5 ) => \cf8 abc\cf5 .\cf12 Zip\cf5 (\cf8 d\cf5 , (\cf8 x\cf5 , \cf8 y\cf5 ) => \cf8 x \cf5 & \cf8 y\cf5 ).\cf12 ToArray\cf5 ())\
+                .\cf12 ToArray\cf5 ();\
+\
+            \cf10 // Ortalama \'e7al\uc0\u305 \u351 ma olas\u305 l\u305 \u287 \u305 \
+            \cf4 double\cf5 [] \cf8 ortalama_olasiliklar \cf5 = \cf8 calisma_durumu\
+                \cf5 .\cf12 Select\cf5 (\cf8 row \cf5 => \cf8 row\cf5 .\cf12 Average\cf5 ())\
+                .\cf12 ToArray\cf5 ();\
+\
+            \cf10 //-----------------------------------------Z-tablo de\uc0\u287 eri ile \'e7al\u305 \u351 ma olas\u305 l\u305 \u287 \u305  hesaplama-----------------------\
+            \cf4 double \cf8 z_tablo_degeri_99 \cf5 = -\cf6 Normal\cf5 .\cf9 InvCDF\cf5 (\cf14 0\cf5 , \cf14 1\cf5 , \cf14 0.99\cf5 );\
+            \cf4 double \cf8 z_tablo_degeri_80 \cf5 = -\cf6 Normal\cf5 .\cf9 InvCDF\cf5 (\cf14 0\cf5 , \cf14 1\cf5 , \cf14 0.80\cf5 );\
+            \cf4 double \cf8 z_tablo_degeri_60 \cf5 = -\cf6 Normal\cf5 .\cf9 InvCDF\cf5 (\cf14 0\cf5 , \cf14 1\cf5 , \cf14 0.60\cf5 );\
+\
+            \cf4 double\cf5 [] \cf8 olasilik_99 \cf5 = \cf4 new double\cf5 [\cf8 n\cf5 ];\
+            \cf4 double\cf5 [] \cf8 olasilik_80 \cf5 = \cf4 new double\cf5 [\cf8 n\cf5 ];\
+            \cf4 double\cf5 [] \cf8 olasilik_60 \cf5 = \cf4 new double\cf5 [\cf8 n\cf5 ];\
+\
+            \cf13 for \cf5 (\cf4 int \cf8 i \cf5 = \cf14 0\cf5 ; \cf8 i \cf5 < \cf8 n\cf5 ; \cf8 i\cf5 ++)\
+            \{\
+                \cf4 double \cf8 a \cf5 = \cf8 toprak_nemi_degerleri\cf5 [\cf8 i\cf5 ].\cf12 Average\cf5 ();\
+                \cf4 double \cf8 s \cf5 = \cf6 Math\cf5 .\cf9 Sqrt\cf5 (\cf8 toprak_nemi_degerleri\cf5 [\cf8 i\cf5 ].\cf12 Average\cf5 (\cf8 val \cf5 => \cf6 Math\cf5 .\cf9 Pow\cf5 (\cf8 val \cf5 - \cf8 a\cf5 , \cf14 2\cf5 )));\
+\
+                \cf13 if \cf5 (\cf8 s \cf5 == \cf14 0\cf5 )\
+                \{\
+                    \cf8 olasilik_99\cf5 [\cf8 i\cf5 ] = \cf8 ortalama_olasiliklar\cf5 [\cf8 i\cf5 ] >= \cf14 0.99 \cf5 ? \cf14 1 \cf5 : \cf14 0\cf5 ;\
+                    \cf8 olasilik_80\cf5 [\cf8 i\cf5 ] = \cf8 ortalama_olasiliklar\cf5 [\cf8 i\cf5 ] >= \cf14 0.80 \cf5 ? \cf14 1 \cf5 : \cf14 0\cf5 ;\
+                    \cf8 olasilik_60\cf5 [\cf8 i\cf5 ] = \cf8 ortalama_olasiliklar\cf5 [\cf8 i\cf5 ] >= \cf14 0.60 \cf5 ? \cf14 1 \cf5 : \cf14 0\cf5 ;\
+                    \cf13 continue\cf5 ;\
+                \}\
+\
+                \cf4 double\cf5 [] \cf8 z_degerleri \cf5 = \cf8 toprak_nemi_degerleri\cf5 [\cf8 i\cf5 ]\
+                    .\cf12 Select\cf5 (\cf8 val \cf5 => (\cf8 val \cf5 - \cf8 a\cf5 ) / \cf8 s\cf5 )\
+                    .\cf12 ToArray\cf5 ();\
+\
+                \cf8 olasilik_99\cf5 [\cf8 i\cf5 ] = \cf8 z_degerleri\cf5 .\cf12 Count\cf5 (\cf8 z \cf5 => \cf8 z \cf5 < \cf8 z_tablo_degeri_99\cf5 ) / (\cf4 double\cf5 )\cf8 toprak_nemi_degerleri\cf5 [\cf8 i\cf5 ].Length;\
+                \cf8 olasilik_80\cf5 [\cf8 i\cf5 ] = \cf8 z_degerleri\cf5 .\cf12 Count\cf5 (\cf8 z \cf5 => \cf8 z \cf5 < \cf8 z_tablo_degeri_80\cf5 ) / (\cf4 double\cf5 )\cf8 toprak_nemi_degerleri\cf5 [\cf8 i\cf5 ].Length;\
+                \cf8 olasilik_60\cf5 [\cf8 i\cf5 ] = \cf8 z_degerleri\cf5 .\cf12 Count\cf5 (\cf8 z \cf5 => \cf8 z \cf5 < \cf8 z_tablo_degeri_60\cf5 ) / (\cf4 double\cf5 )\cf8 toprak_nemi_degerleri\cf5 [\cf8 i\cf5 ].Length;\
+            \}\
+\
+            \cf4 var \cf8 response \cf5 = \cf4 new \cf6 HesaplamaResultDto\
+            \cf5 \{\
+                UserId = \cf8 request\cf5 .UserId,\
+                RegionId = \cf8 request\cf5 .BolgeId,\
+                RegionMethodId = \cf8 request\cf5 .BolgeYontemId,\
+                YagmurOrtalama = \cf8 yagmur_genel_ortalama\cf5 ,\
+                KarOrtalama = \cf8 kar_genel_ortalama\cf5 ,\
+                ToprakSicakligiOrtalama = \cf8 toprak_sicakligi_genel_ortalama\cf5 ,\
+                Results = \cf8 olasilik_99\cf5 .\cf12 Select\cf5 ((\cf2 probability\cf5 , \cf8 index\cf5 ) => \cf4 new \cf6 HesaplamaDailyResultDto\
+                \cf5 \{\
+                    DayIndex = \cf8 index \cf5 + \cf14 1\cf5 ,\
+                    RegionId = \cf8 request\cf5 .BolgeId,\
+                    BolgeYontemId = \cf8 request\cf5 .BolgeYontemId,\
+                    OrtalamaOlasilik = \cf4 new \cf6 List\cf5 <\cf4 double\cf5 > \{ \cf6 Math\cf5 .\cf9 Round\cf5 (\cf8 ortalama_olasiliklar\cf5 [\cf8 index\cf5 ], \cf14 4\cf5 ) \},\
+                    YuzdeDoksanDokuzOlasilik = \cf4 new \cf6 List\cf5 <\cf4 double\cf5 > \{ \cf6 Math\cf5 .\cf9 Round\cf5 (\cf8 olasilik_99\cf5 [\cf8 index\cf5 ], \cf14 4\cf5 ) \},\
+                    YuzdeSeksenOlasilik = \cf4 new \cf6 List\cf5 <\cf4 double\cf5 > \{ \cf6 Math\cf5 .\cf9 Round\cf5 (\cf8 olasilik_80\cf5 [\cf8 index\cf5 ], \cf14 4\cf5 ) \},\
+                    YuzdeAltm\uc0\u305 sOlasilik = \cf4 new \cf6 List\cf5 <\cf4 double\cf5 > \{ \cf6 Math\cf5 .\cf9 Round\cf5 (\cf8 olasilik_60\cf5 [\cf8 index\cf5 ], \cf14 4\cf5 ) \}\cf2 ,\
+                \cf5 \}).\cf12 ToList\cf5 ()\cf2 ,\
+            \cf5 \};\
+\
+            \cf6 List\cf5 <\cf4 double\cf5 > \cf8 ortalamaOlasiliklar \cf5 = \cf8 response\cf5 .Results\
+                .\cf12 SelectMany\cf5 (\cf8 result \cf5 => \cf8 result\cf5 .OrtalamaOlasilik)\
+                .\cf12 ToList\cf5 ();\
+\
+            \cf4 int \cf8 calisilabilirGunSayisi99 \cf5 = \cf8 ortalamaOlasiliklar\cf5 .\cf12 Count\cf5 (\cf8 olasilik \cf5 => \cf8 olasilik \cf5 >= \cf14 0.99\cf5 );\
+            \cf4 int \cf8 calisilabilirGunSayisi80 \cf5 = \cf8 ortalamaOlasiliklar\cf5 .\cf12 Count\cf5 (\cf8 olasilik \cf5 => \cf8 olasilik \cf5 >= \cf14 0.80\cf5 );\
+            \cf4 int \cf8 calisilabilirGunSayisi60 \cf5 = \cf8 ortalamaOlasiliklar\cf5 .\cf12 Count\cf5 (\cf8 olasilik \cf5 => \cf8 olasilik \cf5 >= \cf14 0.60\cf5 );\
+\
+            \cf4 int\cf5 [] \cf8 calisilabilirGunSayilariAyBazinda99 \cf5 = \cf4 new int\cf5 [\cf14 12\cf5 ];\
+            \cf4 int\cf5 [] \cf8 calisilabilirGunSayilariAyBazinda80 \cf5 = \cf4 new int\cf5 [\cf14 12\cf5 ];\
+            \cf4 int\cf5 [] \cf8 calisilabilirGunSayilariAyBazinda60 \cf5 = \cf4 new int\cf5 [\cf14 12\cf5 ];\
+\
+            \cf13 for \cf5 (\cf4 int \cf8 i \cf5 = \cf14 0\cf5 ; \cf8 i \cf5 < \cf14 12\cf5 ; \cf8 i\cf5 ++)\
+            \{\
+                \cf4 int \cf8 gunSayisi \cf5 = \cf8 gun_sayilari\cf5 [\cf8 i\cf5 ];\
+                \cf4 var \cf8 ayOlasiliklar \cf5 = \cf8 ortalamaOlasiliklar\cf5 .\cf12 Skip\cf5 (\cf8 i \cf5 * \cf8 gunSayisi\cf5 ).\cf12 Take\cf5 (\cf8 gunSayisi\cf5 );\
+                \cf8 calisilabilirGunSayilariAyBazinda99\cf5 [\cf8 i\cf5 ] = \cf8 ayOlasiliklar\cf5 .\cf12 Count\cf5 (\cf8 olasilik \cf5 => \cf8 olasilik \cf5 >= \cf14 0.99\cf5 );\
+                \cf8 calisilabilirGunSayilariAyBazinda80\cf5 [\cf8 i\cf5 ] = \cf8 ayOlasiliklar\cf5 .\cf12 Count\cf5 (\cf8 olasilik \cf5 => \cf8 olasilik \cf5 >= \cf14 0.80\cf5 );\
+                \cf8 calisilabilirGunSayilariAyBazinda60\cf5 [\cf8 i\cf5 ] = \cf8 ayOlasiliklar\cf5 .\cf12 Count\cf5 (\cf8 olasilik \cf5 => \cf8 olasilik \cf5 >= \cf14 0.60\cf5 );\
+            \}\
+\
+            \cf8 response\cf5 .CalisilabilirGunSayisi99 = \cf8 calisilabilirGunSayisi99\cf5 ;\
+            \cf8 response\cf5 .CalisilabilirGunSayisi80 = \cf8 calisilabilirGunSayisi80\cf5 ;\
+            \cf8 response\cf5 .CalisilabilirGunSayisi60 = \cf8 calisilabilirGunSayisi60\cf5 ;\
+            \cf8 response\cf5 .CalisilabilirGunSayilariAyBazinda99 = \cf8 calisilabilirGunSayilariAyBazinda99\cf5 .\cf12 ToList\cf5 ();\
+            \cf8 response\cf5 .CalisilabilirGunSayilariAyBazinda80 = \cf8 calisilabilirGunSayilariAyBazinda80\cf5 .\cf12 ToList\cf5 ();\
+            \cf8 response\cf5 .CalisilabilirGunSayilariAyBazinda60 = \cf8 calisilabilirGunSayilariAyBazinda60\cf5 .\cf12 ToList\cf5 ();\
+\
+            \cf4 var \cf8 hesaplamaResult \cf5 = \cf4 new \cf6 HesaplamaResult\
+            \cf5 \{\
+                Id = \cf6 Guid\cf5 .\cf9 NewGuid\cf5 (),\
+                UserId = \cf8 response\cf5 .UserId.\cf9 ToString\cf5 (),\
+                CalisilabilirGunSayilariAyBazinda99 = \cf8 response\cf5 .CalisilabilirGunSayilariAyBazinda99,\
+                CalisilabilirGunSayilariAyBazinda80 = \cf8 response\cf5 .CalisilabilirGunSayilariAyBazinda80,\
+                CalisilabilirGunSayileriAyBazinde60 = \cf8 response\cf5 .CalisilabilirGunSayilariAyBazinda60,\
+                CalisilabilirGunSayisi99 = \cf8 response\cf5 .CalisilabilirGunSayisi99,\
+                CalisilabilirGunSayisi80 = \cf8 response\cf5 .CalisilabilirGunSayisi80,\
+                CalisilabilirGunSayisi60 = \cf8 response\cf5 .CalisilabilirGunSayisi60,\
+                RegionId = \cf8 response\cf5 .RegionId,\
+                RegionMethodId = \cf8 response\cf5 .RegionMethodId,\
+                CreatedDate = \cf6 DateTime\cf5 .UtcNow,\
+                Results = \cf8 response\cf5 .Results.\cf12 Select\cf5 (\cf8 r \cf5 => \cf4 new \cf6 HesaplamaDailyResult\
+                \cf5 \{\
+                    Id = \cf6 Guid\cf5 .\cf9 NewGuid\cf5 (),\
+                    HesaplamaResultId = \cf6 Guid\cf5 .\cf9 NewGuid\cf5 (),\
+                    DayIndex = \cf8 r\cf5 .DayIndex,\
+                    RegionId = \cf8 r\cf5 .RegionId,\
+                    BolgeYontemId = \cf8 r\cf5 .BolgeYontemId,\
+                    CalisilabilirGunSayisi = \cf8 r\cf5 .CalisilabilirGunSayisi,\
+                    OrtalamaOlasilik = \cf8 r\cf5 .OrtalamaOlasilik.\cf12 FirstOrDefault\cf5 (),\
+                    YuzdeAltm\uc0\u305 sOlasilik = \cf8 r\cf5 .YuzdeAltm\uc0\u305 sOlasilik.\cf12 FirstOrDefault\cf5 (),\
+                    YuzdeSeksenOlasilik = \cf8 r\cf5 .YuzdeSeksenOlasilik.\cf12 FirstOrDefault\cf5 (),\
+                    YuzdeDoksanDokuzOlasilik = \cf8 r\cf5 .YuzdeDoksanDokuzOlasilik.\cf12 FirstOrDefault\cf5 ()\cf2 ,\
+                \cf5 \}).\cf12 ToList\cf5 ()\
+            \};\
+\
+            \cf4 await \cf5 _hesaplamaRepository.\cf9 SaveHesaplamaResultAsync\cf5 (\cf8 hesaplamaResult\cf5 );\
+            \cf13 return \cf8 response\cf5 ;\
+        \}\
+\
+        \cf4 public async \cf6 Task\cf5 <\cf6 List\cf5 <\cf6 HesaplamaResult\cf5 >> \cf9 GetHesaplamaResultsByUserIdAsync\cf5 (\cf4 string \cf8 userId\cf5 )\
+        \{\
+            \cf4 var \cf8 results \cf5 = \cf4 await \cf5 _hesaplamaRepository.\cf9 GetHesaplamaResultsByUserIdAsync\cf5 (\cf8 userId\cf5 );\
+            \cf13 return \cf8 results\cf5 .\cf12 Select\cf5 (\cf8 hr \cf5 => \cf4 new \cf6 HesaplamaResult\
+            \cf5 \{\
+                Id = \cf8 hr\cf5 .Id,\
+                UserId = \cf8 hr\cf5 .UserId,\
+                RegionId = \cf8 hr\cf5 .RegionId,\
+                RegionMethodId = \cf8 hr\cf5 .RegionMethodId,\
+                CreatedDate = \cf8 hr\cf5 .CreatedDate,\
+                CalisilabilirGunSayilariAyBazinda99 = \cf8 hr\cf5 .CalisilabilirGunSayilariAyBazinda99,\
+                CalisilabilirGunSayilariAyBazinda80 = \cf8 hr\cf5 .CalisilabilirGunSayilariAyBazinda80,\
+                CalisilabilirGunSayileriAyBazinde60 = \cf8 hr\cf5 .CalisilabilirGunSayileriAyBazinde60,\
+                CalisilabilirGunSayisi99 = \cf8 hr\cf5 .CalisilabilirGunSayisi99,\
+                CalisilabilirGunSayisi80 = \cf8 hr\cf5 .CalisilabilirGunSayisi80,\
+                CalisilabilirGunSayisi60 = \cf8 hr\cf5 .CalisilabilirGunSayisi60,\
+                Results = \cf8 hr\cf5 .Results.\cf12 OrderBy\cf5 (\cf8 dr \cf5 => \cf8 dr\cf5 .DayIndex).\cf12 ToList\cf5 ()\
+            \}).\cf12 OrderByDescending\cf5 (\cf8 h \cf5 => \cf8 h\cf5 .CreatedDate).\cf12 ToList\cf5 ();\
+        \}\
+    \}\
+\cf2 \}\
+\
+}
