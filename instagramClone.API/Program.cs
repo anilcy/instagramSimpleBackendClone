@@ -67,9 +67,9 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddIdentityCore<AppUser>(options =>
     {
-        // Identity seçeneklerinizi buraya ekleyebilirsiniz
+        // Identity seçenekleri buraya eklenebilir
     })
-    .AddRoles<AppRole>()  // Roller kullanacaksanız ekleyin, kullanmayacaksanız bu satırı kaldırabilirsiniz
+    .AddRoles<AppRole>()  // Roller kullanacaksanız ekleyin, kullanılmayacaksa bu satır kaldırılabilir
     .AddEntityFrameworkStores<InstagramDbContext>()
     .AddDefaultTokenProviders();
 

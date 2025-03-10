@@ -34,4 +34,25 @@ public class FileStorageService : IFileStorageService
         // url is returned
         return $"/{_uploadsFolder}/{fileName}";
     }
+    
+    public Task<bool> DeleteFileAsync(string fileUrl)
+    {
+        try
+        {
+            // Dosyanın fiziksel yolunu belirle
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), fileUrl.TrimStart('/'));
+
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+                return Task.FromResult(true); // Başarıyla silindi
+            }
+            
+            return Task.FromResult(false); // Dosya zaten yok
+        }
+        catch
+        {
+            return Task.FromResult(false); // Silme başarısız oldu
+        }
+    }
 }

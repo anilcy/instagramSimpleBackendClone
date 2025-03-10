@@ -15,3 +15,9 @@ obj/
 
 .env
 .env.local
+
+/uploads/
+*.jpg
+*.png
+*.jpeg
+*.gif

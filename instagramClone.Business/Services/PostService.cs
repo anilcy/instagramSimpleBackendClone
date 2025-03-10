@@ -79,25 +79,35 @@ namespace instagramClone.Business.Services
             if (post == null)
                 throw new Exception("Post not found or not accessible.");
 
-            // Eğer yeni bir dosya yollandıysa
+            // 📌 Eğer yeni bir dosya yollandıysa (Zorunlu değil, opsiyonel hale getirdik)
             if (dto.ImageFile != null)
             {
+                // 📌 Eğer postun eski bir resmi varsa, onu sil
+                if (!string.IsNullOrEmpty(post.ImageUrl))
+                {
+                    await _fileStorageService.DeleteFileAsync(post.ImageUrl); // ✅ Yeni eklenen işlem
+                }
+
+                // 📌 Yeni resmi yükleyip, post'a kaydet
                 string newImageUrl = await _fileStorageService.UploadFileAsync(dto.ImageFile);
                 post.ImageUrl = newImageUrl;
             }
 
-            // Caption güncelle
+            // 📌 Caption güncelleme (Zorunlu değil)
             if (!string.IsNullOrEmpty(dto.Caption))
                 post.Caption = dto.Caption;
 
             post.ModifiedAt = DateTime.UtcNow;
 
-            // Repository üzerinden update
+            // 📌 Repository üzerinden update
             await _postRepository.UpdateAsync(post);
-            await _postRepository.SaveChangesAsync();
+
+            // 📌 Eğer UpdateAsync içinde zaten SaveChanges çağrılıyorsa, buradaki satır gereksiz.
+            // await _postRepository.SaveChangesAsync(); ❌ Kaldırıldı
 
             return _mapper.Map<PostDto>(post);
         }
+
 
         public async Task<bool> DeletePostAsync(int postId, Guid userId)
         {

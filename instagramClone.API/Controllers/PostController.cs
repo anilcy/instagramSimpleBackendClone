@@ -104,19 +104,5 @@ namespace instagramClone.API.Controllers
                 return NotFound("Post not found or already deleted.");
             return Ok("Post deleted successfully.");
         }
-        
-        [HttpGet("debug-posts")]
-        public async Task<IActionResult> GetDebugPosts()
-        {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-            if (userId == null)
-                return Unauthorized("User not authenticated");
-
-            var posts = await _postService.GetPostsAsync(Guid.Parse(userId), 1, 10);
-            return Ok(posts);
-        }
-
-
     }
 }
