@@ -20,4 +20,5 @@ public class InstagramDbContext : IdentityDbContext<AppUser, AppRole, Guid>
             .OnDelete(DeleteBehavior.Restrict);
     }    
     public DbSet<Post> Posts { get; set; }
+    public DbSet<Like> Likes { get; set; }
 }

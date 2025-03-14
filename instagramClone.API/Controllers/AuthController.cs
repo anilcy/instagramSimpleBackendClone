@@ -1,5 +1,8 @@
+using System.Security.Claims;
 using instagramClone.Business.Interfaces;
 using instagramClone.Entities.Dtos;
+using Microsoft.AspNetCore.Authorization;
+
 namespace instagramClone.API.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -36,4 +39,13 @@ public class AuthController : ControllerBase
         }
         return Ok(new { token = authResponse.Token });
     }
+    
+    [Authorize]
+    [HttpGet("test-auth")]
+    public IActionResult TestAuth()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Ok(new { Message = "Token geçerli!", UserId = userId });
+    }
+
 }

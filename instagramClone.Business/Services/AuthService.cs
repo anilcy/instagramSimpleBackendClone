@@ -40,7 +40,7 @@ namespace instagramClone.Business.Services
             };
 
             var createdUser = await _userManager.CreateAsync(newUser, request.Password);
-
+            
             if (!createdUser.Succeeded)
             {
                 return new AuthenticationResult

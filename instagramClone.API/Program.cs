@@ -13,22 +13,17 @@ using System.Text;
 using instagramClone.Business.Mappings;
 using instagramClone.Data.Interfaces;
 using instagramClone.Data.Repositories;
-using Microsoft.OpenApi.Models; 
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-
-// Swagger configuration with JWT Security Scheme eklendi
+// Swagger configuration with JWT Security Scheme
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo 
-    { 
-        Title = "InstagramClone API", 
-        Version = "v1" 
-    });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "InstagramClone API", Version = "v1" });
 
     var securityScheme = new OpenApiSecurityScheme
     {
@@ -38,43 +33,31 @@ builder.Services.AddSwaggerGen(c =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer",
         BearerFormat = "JWT",
-        Reference = new OpenApiReference
-        {
-            Type = ReferenceType.SecurityScheme,
-            Id = "Bearer"
-        }
+        Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
     };
 
     c.AddSecurityDefinition("Bearer", securityScheme);
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        { securityScheme, new string[] { } }
-    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement { { securityScheme, new string[] { } } });
 });
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// services
+// Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<UserManager<AppUser>>();
 builder.Services.AddScoped<SignInManager<AppUser>>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
-builder.Services.AddScoped<IPostService, PostService>(); 
-builder.Services.AddScoped<IFileStorageService, FileStorageService>(); 
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
-builder.Services.AddIdentityCore<AppUser>(options =>
-    {
-        // Identity seçenekleri buraya eklenebilir
-    })
-    .AddRoles<AppRole>()  // Roller kullanacaksanız ekleyin, kullanılmayacaksa bu satır kaldırılabilir
+builder.Services.AddIdentityCore<AppUser>(options => { })
+    .AddRoles<AppRole>()
     .AddEntityFrameworkStores<InstagramDbContext>()
     .AddDefaultTokenProviders();
 
-
-// load .env
+// Load .env
 Env.Load();
 builder.Configuration.AddEnvironmentVariables();
 var connectionString = Env.GetString("DB_CONNECTION_STRING");
@@ -86,15 +69,10 @@ Console.WriteLine($"🔹 JWT_AUDIENCE: {Env.GetString("JWT_AUDIENCE")}");
 builder.Services.AddDbContext<InstagramDbContext>(options =>
     options.UseNpgsql(connectionString, b => b.MigrationsAssembly("instagramClone.Data")));
 
-var jwtKey = Env.GetString("JWT_KEY");
-var jwtIssuer = Env.GetString("JWT_ISSUER");
-var jwtAudience = Env.GetString("JWT_AUDIENCE");
-
-if (string.IsNullOrEmpty(jwtKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
-{
-    throw new Exception("⚠️ JWT yapılandırması eksik! Lütfen .env dosyanı kontrol et.");
-}
-
+// JWT Yapılandırması
+var jwtKey = Env.GetString("JWT_KEY") ?? throw new Exception("⚠️ JWT_KEY not found in .env");
+var jwtIssuer = Env.GetString("JWT_ISSUER") ?? throw new Exception("⚠️ JWT_ISSUER not found in .env");
+var jwtAudience = Env.GetString("JWT_AUDIENCE") ?? throw new Exception("⚠️ JWT_AUDIENCE not found in .env");
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 
 builder.Services
@@ -111,7 +89,7 @@ builder.Services
             ValidAudience = jwtAudience,
             IssuerSigningKey = key
         };
-        
+
         options.Events = new JwtBearerEvents
         {
             OnAuthenticationFailed = context =>
@@ -137,18 +115,15 @@ builder.Services
                 return Task.CompletedTask;
             }
         };
-
-
     });
 
 var app = builder.Build();
 
 app.UseHttpsRedirection();
 
-
 // JWT Authentication
 app.UseRouting();
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
@@ -174,3 +149,5 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+
+

@@ -4,28 +4,27 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using instagramClone.Business.Interfaces;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using instagramClone.Entities.Models;
+using DotNetEnv;
 
 namespace instagramClone.Business.Services
 {
-    public class TokenService : ITokenService 
+    public class TokenService : ITokenService
     {
-        private readonly IConfiguration _configuration;
         private readonly SymmetricSecurityKey _key;
         private readonly string _issuer;
         private readonly string _audience;
         private readonly double _expireMinutes;
 
-        public TokenService(IConfiguration configuration)
+        public TokenService()
         {
-            _configuration = configuration;
+            Env.Load();
 
-            _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT_KEY"] ?? throw new ArgumentNullException("JWT_KEY not found")));
-            _issuer = _configuration["JWT_ISSUER"] ?? throw new ArgumentNullException("JWT_ISSUER not found");
-            _audience = _configuration["JWT_AUDIENCE"] ?? throw new ArgumentNullException("JWT_AUDIENCE not found");
-            _expireMinutes = Convert.ToDouble(_configuration["JWT_EXPIRE_MINUTES"] ?? "60");
+            _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_KEY") ?? throw new ArgumentNullException("JWT_KEY not found in .env")));
+            _issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? throw new ArgumentNullException("JWT_ISSUER not found in .env");
+            _audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? throw new ArgumentNullException("JWT_AUDIENCE not found in .env");
+            _expireMinutes = Convert.ToDouble(Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES") ?? "60");
         }
 
         public string GenerateJwtToken(AppUser user)
