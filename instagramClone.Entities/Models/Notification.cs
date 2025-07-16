@@ -1,15 +1,23 @@
+using instagramClone.Entities.Dtos;
+
 namespace instagramClone.Entities.Models;
 
 public class Notification
 {
     public int Id { get; set; }
     public Guid RecipientId { get; set; }
-    public string Type { get; set; } = null!;
+    public NotificationType Type { get; set; }
     public string Message { get; set; } = null!;
-    public int EntityId { get; set; }
+    public string? ActionUrl { get; set; }
+    public bool IsRead { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool IsDeleted { get; set; } = false;
     
-    public AppUser Recipient { get; set; } = null!;
+    // Related entities (optional, depending on notification type)
+    public Guid? ActorId { get; set; }  // User who triggered the notification
+    public int? PostId { get; set; }
+    public int? CommentId { get; set; }
     
+    public AppUser Recipient { get; set; } = null!;
+    public AppUser? Actor { get; set; }
 }
