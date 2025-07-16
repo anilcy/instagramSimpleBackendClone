@@ -16,19 +16,19 @@ namespace instagramClone.Data.Repositories
         public async Task<List<Post>> GetPostsByUserIdAsync(Guid userId, int page, int pageSize)
         {
             return await _dbSet
-                .Where(p => p.UserId == userId && !p.IsDeleted)
+                .Where(p => p.AuthorId == userId && !p.IsDeleted)
                 .OrderByDescending(p => p.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Include(p => p.User)
+                .Include(p => p.Author)
                 .ToListAsync();
         }
 
         public async Task<Post?> GetPostByIdAndUserAsync(int postId, Guid userId)
         {
             return await _dbSet
-                .Include(p => p.User)
-                .FirstOrDefaultAsync(p => p.Id == postId && p.UserId == userId && !p.IsDeleted);
+                .Include(p => p.Author)
+                .FirstOrDefaultAsync(p => p.Id == postId && p.AuthorId == userId && !p.IsDeleted);
         }
     }
 }
