@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace instagramClone.Data.Repositories;
 
-public class LikeRepository : GenericRepository<Like>, ILikeRepository
+public class LikeRepository : GenericRepository<PostLike>, ILikeRepository
 {
     private readonly InstagramDbContext _context;
 

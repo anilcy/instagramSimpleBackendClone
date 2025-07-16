@@ -34,7 +34,7 @@ public class LikeService : ILikeService
         }
         else
         {
-            var like = new Like { PostId = postId, UserId = userId, CreatedAt = DateTime.UtcNow };
+            var like = new PostLike { PostId = postId, UserId = userId, CreatedAt = DateTime.UtcNow };
             await _likeRepository.InsertAsync(like);
             await _likeRepository.SaveChangesAsync();
             return true; // Like işlemi gerçekleşti

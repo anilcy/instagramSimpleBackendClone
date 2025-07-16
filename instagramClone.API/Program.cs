@@ -14,32 +14,53 @@ using instagramClone.Business.Mappings;
 using instagramClone.Data.Interfaces;
 using instagramClone.Data.Repositories;
 using Microsoft.OpenApi.Models;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Swagger configuration with JWT Security Scheme
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "InstagramClone API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo 
+    { 
+        Title = "InstagramClone API", 
+        Version = "v1" 
+    });
 
-    var securityScheme = new OpenApiSecurityScheme
+    // JWT Bearer’ı Http tipiyle tanımlıyoruz:
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Name = "Authorization",
-        Description = "Enter 'Bearer' [space] and then your valid token. Example: 'Bearer eyJhbGciOi...'",
+        Description = "JWT Bearer token. Sadece token kısmını girin.",
         In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
+        Type = SecuritySchemeType.Http,    // ← Burayı ApiKey yerine Http yapıyoruz
+        Scheme = "bearer",                 // ← küçük harf “bearer”
         BearerFormat = "JWT",
-        Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
-    };
+        Reference = new OpenApiReference
+        {
+            Type = ReferenceType.SecurityScheme,
+            Id = "Bearer"
+        }
+    });
 
-    c.AddSecurityDefinition("Bearer", securityScheme);
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement { { securityScheme, new string[] { } } });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            // Burada da tanımladığımız Bearer’ı kullanıyoruz:
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference 
+                { 
+                    Type = ReferenceType.SecurityScheme, 
+                    Id = "Bearer" 
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
+
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
@@ -51,12 +72,16 @@ builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ILikeRepository, LikeRepository>();
+builder.Services.AddScoped<ILikeService, LikeService>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 
 builder.Services.AddIdentityCore<AppUser>(options => { })
     .AddRoles<AppRole>()
     .AddEntityFrameworkStores<InstagramDbContext>()
     .AddDefaultTokenProviders();
-
+ 
 // Load .env
 Env.Load();
 builder.Configuration.AddEnvironmentVariables();
@@ -142,10 +167,26 @@ using (var conn = new NpgsqlConnection(connectionString))
 // DbContext
 app.Services.CreateScope().ServiceProvider.GetRequiredService<InstagramDbContext>();
 
+
+// Kök isteği / → /scalar/v1 yönlendir
+app.MapGet("/", context =>
+{
+    context.Response.Redirect("/scalar/v1");
+    return Task.CompletedTask;
+});
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // OpenAPI JSON’ınızı /openapi/v1.json altına taşıyın
+    app.UseSwagger(options =>
+    {
+        options.RouteTemplate = "openapi/{documentName}.json";
+    });
+    
+    // Scalar UI
+    app.MapScalarApiReference(o =>
+            o.WithTheme(ScalarTheme.DeepSpace)   // İstediğiniz temayı seçin
+    );
 }
 
 app.Run();

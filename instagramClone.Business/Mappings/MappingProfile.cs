@@ -16,5 +16,10 @@ public class MappingProfile : Profile
         // Eğer PostCreateDto veya PostUpdateDto dönüşümleri gerekiyorsa ekleyebilirsiniz:
         CreateMap<PostCreateDto, Post>();
         CreateMap<PostUpdateDto, Post>();
+        
+        // **Comment Mapping** 
+        CreateMap<Comment, CommentDto>();
+        CreateMap<CreateCommentDto, Comment>();
+        
     }
 }    

@@ -1,6 +1,4 @@
-using instagramClone.Data.Interfaces;
 using instagramClone.Entities.Models;
-
 
 namespace instagramClone.Data.Interfaces
 {
