@@ -6,16 +6,13 @@ namespace instagramClone.Data.Repositories;
 
 public class MessageRepository : GenericRepository<Message>, IMessageRepository
 {
-    private readonly DbSet<Message> _dbSet;
-
     public MessageRepository(InstagramDbContext context) : base(context)
     {
-        _dbSet = context.Set<Message>();
     }
 
     public async Task<List<Message>> GetConversationAsync(Guid userId, Guid otherUserId, int page, int pageSize)
     {
-        return await _dbSet
+        return await _context.Messages
             .Where(m => (m.SenderId == userId && m.ReceiverId == otherUserId) ||
                        (m.SenderId == otherUserId && m.ReceiverId == userId))
             .Include(m => m.Sender)
@@ -28,7 +25,7 @@ public class MessageRepository : GenericRepository<Message>, IMessageRepository
 
     public async Task<List<Message>> GetConversationsAsync(Guid userId)
     {
-        var conversations = await _dbSet
+        var conversations = await _context.Messages
             .Where(m => m.SenderId == userId || m.ReceiverId == userId)
             .Include(m => m.Sender)
             .Include(m => m.Receiver)
@@ -42,13 +39,13 @@ public class MessageRepository : GenericRepository<Message>, IMessageRepository
 
     public async Task<int> GetUnreadMessagesCountAsync(Guid userId, Guid fromUserId)
     {
-        return await _dbSet
+        return await _context.Messages
             .CountAsync(m => m.ReceiverId == userId && m.SenderId == fromUserId && !m.IsRead);
     }
 
     public async Task MarkMessagesAsReadAsync(Guid userId, Guid fromUserId)
     {
-        var unreadMessages = await _dbSet
+        var unreadMessages = await _context.Messages
             .Where(m => m.ReceiverId == userId && m.SenderId == fromUserId && !m.IsRead)
             .ToListAsync();
 
@@ -62,7 +59,7 @@ public class MessageRepository : GenericRepository<Message>, IMessageRepository
 
     public async Task<Message?> GetLastMessageBetweenUsersAsync(Guid userId, Guid otherUserId)
     {
-        return await _dbSet
+        return await _context.Messages
             .Where(m => (m.SenderId == userId && m.ReceiverId == otherUserId) ||
                        (m.SenderId == otherUserId && m.ReceiverId == userId))
             .Include(m => m.Sender)
