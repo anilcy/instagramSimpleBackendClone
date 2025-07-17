@@ -6,7 +6,8 @@ public class Message
     public Guid SenderId { get; set; }
     public Guid ReceiverId { get; set; }
     public string Content { get; set; } = null!;
-    public DateTime SentAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsRead { get; set; } = false;
     public bool IsDeleted { get; set; } = false;
     
     public AppUser Receiver { get; set; } = null!;
