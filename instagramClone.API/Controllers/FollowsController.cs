@@ -1,5 +1,6 @@
 using instagramClone.Business.Interfaces;
 using instagramClone.Entities.Dtos;
+using instagramClone.Entities.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -50,7 +51,7 @@ public class FollowsController : BaseController
     public async Task<ActionResult<List<FollowRequestDto>>> GetPendingFollowRequests()
     {
         var currentUserId = GetCurrentUserId();
-        var requests = await _followService.GetPendingFollowRequestsAsync(currentUserId);
+        var requests = await _followService.GetFollowRequestsAsync(currentUserId);
         return Ok(requests);
     }
 

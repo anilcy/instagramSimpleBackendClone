@@ -23,7 +23,7 @@ namespace instagramClone.Business.Services
             {
                 PostId = dto.PostId,
                 Content = dto.Content,
-                UserId = userId,
+                AuthorId = userId,
                 CreatedAt = DateTime.UtcNow
             };
 

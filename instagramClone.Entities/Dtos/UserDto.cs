@@ -1,3 +1,5 @@
+using instagramClone.Entities.Models;
+
 namespace instagramClone.Entities.Dtos;
 
 public class UserDto
@@ -21,14 +23,6 @@ public class UserDto
     // Current user's relationship with this user
     public bool IsFollowing { get; set; }
     public FollowStatus? FollowStatus { get; set; }
-}
-
-public class UserSummaryDto
-{
-    public Guid Id { get; set; }
-    public string UserName { get; set; } = null!;
-    public string FullName { get; set; } = null!;
-    public string? ProfilePictureUrl { get; set; }
 }
 
 public class UpdateUserProfileDto

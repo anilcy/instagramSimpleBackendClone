@@ -23,7 +23,11 @@ public class FileStorageService : IFileStorageService
         var filePath = Path.Combine(Directory.GetCurrentDirectory(), _uploadsFolder, fileName);
 
         // a new directory is generated if there is no any
-        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+        var directoryPath = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
 
         // data is written to the file
         using (var stream = new FileStream(filePath, FileMode.Create))
