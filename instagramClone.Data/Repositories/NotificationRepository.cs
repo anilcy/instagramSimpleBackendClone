@@ -7,16 +7,13 @@ namespace instagramClone.Data.Repositories;
 
 public class NotificationRepository : GenericRepository<Notification>, INotificationRepository
 {
-    private readonly DbSet<Notification> _dbSet;
-
     public NotificationRepository(InstagramDbContext context) : base(context)
     {
-        _dbSet = context.Set<Notification>();
     }
 
     public async Task<List<Notification>> GetUserNotificationsAsync(Guid userId, int page, int pageSize)
     {
-        return await _dbSet
+        return await _context.Notifications
             .Where(n => n.RecipientId == userId)
             .Include(n => n.Actor)
             .OrderByDescending(n => n.CreatedAt)
@@ -27,13 +24,13 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
 
     public async Task<int> GetUnreadNotificationsCountAsync(Guid userId)
     {
-        return await _dbSet
+        return await _context.Notifications
             .CountAsync(n => n.RecipientId == userId && !n.IsRead);
     }
 
     public async Task MarkNotificationAsReadAsync(int notificationId, Guid userId)
     {
-        var notification = await _dbSet
+        var notification = await _context.Notifications
             .FirstOrDefaultAsync(n => n.Id == notificationId && n.RecipientId == userId);
         
         if (notification != null)
@@ -45,7 +42,7 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
 
     public async Task MarkAllNotificationsAsReadAsync(Guid userId)
     {
-        var unreadNotifications = await _dbSet
+        var unreadNotifications = await _context.Notifications
             .Where(n => n.RecipientId == userId && !n.IsRead)
             .ToListAsync();
 
@@ -72,7 +69,7 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
             CreatedAt = DateTime.UtcNow
         };
 
-        await _dbSet.AddAsync(notification);
+        await _context.Notifications.AddAsync(notification);
         await _context.SaveChangesAsync();
     }
 }
