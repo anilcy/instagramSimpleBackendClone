@@ -55,7 +55,8 @@ namespace instagramClone.Business.Services
             return new AuthenticationResult
             {
                 Success = true,
-                Token = token
+                Token = token,
+                Errors = Array.Empty<string>()
             };
         }
 
@@ -89,7 +90,8 @@ namespace instagramClone.Business.Services
             return new AuthenticationResult
             {
                 Success = true,
-                Token = token
+                Token = token,
+                Errors = Array.Empty<string>()
             };
         }
     }

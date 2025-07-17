@@ -27,8 +27,9 @@ public class MessageService : IMessageService
             CreatedAt = DateTime.UtcNow
         };
 
-        var createdMessage = await _messageRepository.AddAsync(message);
-        return _mapper.Map<MessageDto>(createdMessage);
+        await _messageRepository.InsertAsync(message);
+        await _messageRepository.SaveChangesAsync();
+        return _mapper.Map<MessageDto>(message);
     }
 
     public async Task<List<MessageDto>> GetConversationAsync(Guid userId, Guid otherUserId, int page = 1, int pageSize = 50)

@@ -36,7 +36,7 @@ namespace instagramClone.Business.Services
             {
                 Caption = dto.Caption,
                 ImageUrl = uploadedImageUrl,
-                UserId = userId,
+                AuthorId = userId,
                 CreatedAt = DateTime.UtcNow,
                 ModifiedAt = DateTime.UtcNow,
                 IsDeleted = false
@@ -46,16 +46,14 @@ namespace instagramClone.Business.Services
             await _postRepository.InsertAsync(post);
             await _postRepository.SaveChangesAsync();
 
-            var postDto = _mapper.Map<PostDto>(post);
-
-            // Kullanıcıyı veritabanından al ve UserName'i ekle
+            // Get user for Author mapping
             var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user != null)
             {
-                postDto.UserName = user.UserName;
+                post.Author = user;
             }
 
-            return postDto;
+            return _mapper.Map<PostDto>(post);
         }
 
         public async Task<List<PostDto>> GetPostsAsync(Guid userId, int page = 1, int pageSize = 20)

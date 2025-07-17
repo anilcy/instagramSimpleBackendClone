@@ -32,9 +32,9 @@ namespace instagramClone.Business.Services
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim("FullName", user.FullName)
+                new Claim("FullName", user.FullName ?? string.Empty)
             };
 
             var credentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256);
