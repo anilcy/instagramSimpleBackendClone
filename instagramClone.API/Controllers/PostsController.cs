@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using instagramClone.Business.Interfaces;
+using instagramClone.API.Extensions;
 
 namespace instagramClone.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [AutoRoute] // Will automatically become /api/v1/posts
     [Authorize]
     public class PostsController : ControllerBase
     {

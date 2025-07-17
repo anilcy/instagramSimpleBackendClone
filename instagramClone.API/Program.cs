@@ -15,10 +15,17 @@ using instagramClone.Data.Interfaces;
 using instagramClone.Data.Repositories;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
+using instagramClone.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
+
+// Add automatic controller naming with enhanced features
+builder.Services.Configure<MvcOptions>(options =>
+{
+    options.Conventions.Add(new EnhancedControllerNamingConvention());
+});
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>

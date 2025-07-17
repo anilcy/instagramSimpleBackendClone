@@ -2,13 +2,14 @@ using System.Security.Claims;
 using instagramClone.Business.Interfaces;
 using instagramClone.Entities.Dtos;
 using Microsoft.AspNetCore.Authorization;
+using instagramClone.API.Extensions;
 
 namespace instagramClone.API.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
 [ApiController]
-[Route("api/[controller]")]
+[AutoRoute(SkipPluralization = true)] // Auth doesn't need pluralization
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;

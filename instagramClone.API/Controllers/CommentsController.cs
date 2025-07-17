@@ -3,11 +3,12 @@ using instagramClone.Entities.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using instagramClone.API.Extensions;
 
 namespace instagramClone.API.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [AutoRoute] // Will automatically become /api/v1/comments
     [ApiController]
     public class CommentsController : ControllerBase
     {

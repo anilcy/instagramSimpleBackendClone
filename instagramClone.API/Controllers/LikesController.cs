@@ -4,9 +4,10 @@ using instagramClone.Business.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using instagramClone.API.Extensions;
 
 [Authorize]
-[Route("api/[controller]")]
+[AutoRoute] // Will automatically become /api/v1/likes
 [ApiController]
 public class LikesController : ControllerBase
 {
