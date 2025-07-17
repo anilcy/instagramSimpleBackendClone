@@ -6,7 +6,7 @@ namespace instagramClone.Data.Repositories;
 
 public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
-    private readonly InstagramDbContext _context;
+    protected readonly InstagramDbContext _context;
     private readonly DbSet<T> _dbSet;
 
     public GenericRepository(InstagramDbContext context)
@@ -20,7 +20,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return await _dbSet.ToListAsync();
     }
 
-    public async Task<T> GetByIdAsync(object id)
+    public async Task<T?> GetByIdAsync(object id)
     {
         return await _dbSet.FindAsync(id);
     }
