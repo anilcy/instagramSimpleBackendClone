@@ -36,12 +36,13 @@ public class FollowService : IFollowService
             CreatedAt = DateTime.UtcNow
         };
 
-        var createdFollow = await _followRepository.AddAsync(follow);
+        await _followRepository.InsertAsync(follow);
+        await _followRepository.SaveChangesAsync();
         
         // Create notification
         await _notificationService.CreateFollowNotificationAsync(currentUserId, targetUserId);
 
-        return _mapper.Map<FollowDto>(createdFollow);
+        return _mapper.Map<FollowDto>(follow);
     }
 
     public async Task<bool> UnfollowUserAsync(Guid currentUserId, Guid targetUserId)
@@ -51,6 +52,7 @@ public class FollowService : IFollowService
             return false;
 
         await _followRepository.DeleteAsync(follow);
+        await _followRepository.SaveChangesAsync();
         return true;
     }
 
@@ -63,30 +65,43 @@ public class FollowService : IFollowService
         follow.Status = status;
         follow.DecidedAt = DateTime.UtcNow;
         await _followRepository.UpdateAsync(follow);
+        await _followRepository.SaveChangesAsync();
 
         return new FollowResponseDto
         {
-            FollowRequest = _mapper.Map<FollowRequestDto>(follow),
-            Status = status
+            Success = true,
+            Message = status == FollowStatus.Accepted ? "Follow request accepted" : "Follow request rejected",
+            Status = status,
+            Follow = _mapper.Map<FollowDto>(follow)
         };
     }
 
-    public async Task<List<FollowRequestDto>> GetPendingFollowRequestsAsync(Guid userId)
+    public async Task<List<FollowRequestDto>> GetFollowRequestsAsync(Guid userId)
     {
         var followRequests = await _followRepository.GetPendingFollowRequestsAsync(userId);
         return _mapper.Map<List<FollowRequestDto>>(followRequests);
     }
 
-    public async Task<List<UserSummaryDto>> GetFollowersAsync(Guid userId, int page = 1, int pageSize = 20)
+    public async Task<List<FollowDto>> GetFollowersAsync(Guid userId, int page = 1, int pageSize = 20)
     {
         var followers = await _followRepository.GetFollowersAsync(userId, page, pageSize);
-        return followers.Select(f => _mapper.Map<UserSummaryDto>(f.Follower)).ToList();
+        return _mapper.Map<List<FollowDto>>(followers);
     }
 
-    public async Task<List<UserSummaryDto>> GetFollowingAsync(Guid userId, int page = 1, int pageSize = 20)
+    public async Task<List<FollowDto>> GetFollowingAsync(Guid userId, int page = 1, int pageSize = 20)
     {
         var following = await _followRepository.GetFollowingAsync(userId, page, pageSize);
-        return following.Select(f => _mapper.Map<UserSummaryDto>(f.Followed)).ToList();
+        return _mapper.Map<List<FollowDto>>(following);
+    }
+
+    public async Task<int> GetFollowersCountAsync(Guid userId)
+    {
+        return await _followRepository.GetFollowersCountAsync(userId);
+    }
+
+    public async Task<int> GetFollowingCountAsync(Guid userId)
+    {
+        return await _followRepository.GetFollowingCountAsync(userId);
     }
 
     public async Task<bool> IsFollowingAsync(Guid currentUserId, Guid targetUserId)

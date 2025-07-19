@@ -1,3 +1,5 @@
+using instagramClone.Entities.Models;
+
 namespace instagramClone.Entities.Dtos;
 
 public class FollowDto
@@ -26,6 +28,8 @@ public class FollowActionDto
 
 public class FollowResponseDto
 {
-    public FollowRequestDto FollowRequest { get; set; } = null!;
+    public bool Success { get; set; }
+    public string Message { get; set; } = null!;
     public FollowStatus Status { get; set; }
+    public FollowDto? Follow { get; set; }
 }
