@@ -1,6 +1,7 @@
 using AutoMapper;
 using instagramClone.Entities.Models;
 using instagramClone.Entities.Dtos;
+using instagramClone.Entities.Dtos.Story;
 
 namespace instagramClone.Business.Mappings;
 
@@ -19,9 +20,15 @@ public class MappingProfile : Profile
         // Comment mappings
         CreateMap<Comment, CommentDto>()
             .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.Author));
-        
-        CreateMap<CreateCommentDto, Comment>();
-        
+
+        // Story mappings
+        CreateMap<Story, StoryDto>()
+            .ForMember(d => d.UserName,  o => o.MapFrom(s => s.User.UserName))
+            .ForMember(d => d.ProfilePictureUrl, o => o.MapFrom(s => s.User.ProfilePictureUrl));
+
+        CreateMap<StoryCreateDto, Story>();
+
+
         // User mappings
         CreateMap<AppUser, UserDto>();
         CreateMap<AppUser, UserSummaryDto>();
@@ -38,4 +45,4 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Follower, opt => opt.MapFrom(src => src.Follower))
             .ForMember(dest => dest.Followed, opt => opt.MapFrom(src => src.Followed));
     }
-}    
+}

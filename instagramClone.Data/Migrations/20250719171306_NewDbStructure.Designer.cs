@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using instagramClone.Data;
@@ -11,9 +12,11 @@ using instagramClone.Data;
 namespace instagramClone.Data.Migrations
 {
     [DbContext(typeof(InstagramDbContext))]
-    partial class InstagramDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250719171306_NewDbStructure")]
+    partial class NewDbStructure
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -477,55 +480,6 @@ namespace instagramClone.Data.Migrations
                     b.ToTable("Likes");
                 });
 
-            modelBuilder.Entity("instagramClone.Entities.Models.Story", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("MediaUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Stories");
-                });
-
-            modelBuilder.Entity("instagramClone.Entities.Models.StoryView", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("StoryId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Id")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("ViewedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("UserId", "StoryId");
-
-                    b.HasIndex("StoryId");
-
-                    b.ToTable("StoryViews");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("instagramClone.Entities.Models.AppRole", null)
@@ -707,36 +661,6 @@ namespace instagramClone.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("instagramClone.Entities.Models.Story", b =>
-                {
-                    b.HasOne("instagramClone.Entities.Models.AppUser", "User")
-                        .WithMany("Stories")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("instagramClone.Entities.Models.StoryView", b =>
-                {
-                    b.HasOne("instagramClone.Entities.Models.Story", "Story")
-                        .WithMany("Views")
-                        .HasForeignKey("StoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("instagramClone.Entities.Models.AppUser", "User")
-                        .WithMany("StoryViews")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Story");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("instagramClone.Entities.Models.AppUser", b =>
                 {
                     b.Navigation("CommentLikes");
@@ -756,10 +680,6 @@ namespace instagramClone.Data.Migrations
                     b.Navigation("ReceivedMessages");
 
                     b.Navigation("SentMessages");
-
-                    b.Navigation("Stories");
-
-                    b.Navigation("StoryViews");
                 });
 
             modelBuilder.Entity("instagramClone.Entities.Models.Comment", b =>
@@ -774,11 +694,6 @@ namespace instagramClone.Data.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("Likes");
-                });
-
-            modelBuilder.Entity("instagramClone.Entities.Models.Story", b =>
-                {
-                    b.Navigation("Views");
                 });
 #pragma warning restore 612, 618
         }
