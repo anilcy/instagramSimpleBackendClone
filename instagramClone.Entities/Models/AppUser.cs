@@ -27,4 +27,6 @@ public class AppUser : IdentityUser<Guid>
     public ICollection<Message> SentMessages { get; set; } = new List<Message>();
     public ICollection<Message> ReceivedMessages { get; set; } = new List<Message>();
     public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+    public ICollection<Story> Stories { get; set; } = new List<Story>();
+    public ICollection<StoryView>  StoryViews  { get; set; } = new List<StoryView>();
 }

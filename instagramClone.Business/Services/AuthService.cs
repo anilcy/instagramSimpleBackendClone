@@ -91,7 +91,11 @@ namespace instagramClone.Business.Services
             {
                 Success = true,
                 Token = token,
-                Errors = Array.Empty<string>()
+                Errors = Array.Empty<string>(),
+                Id                  = user.Id,
+                UserName            = user.UserName!,
+                FullName            = user.FullName,
+                ProfilePictureUrl   = user.ProfilePictureUrl
             };
         }
     }

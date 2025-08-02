@@ -61,7 +61,6 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Services
@@ -76,6 +75,8 @@ builder.Services.AddScoped<ILikeRepository, LikeRepository>();
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IStoryRepository, StoryRepository>();
+builder.Services.AddScoped<StoryService>();
 
 builder.Services.AddIdentityCore<AppUser>(options => { })
     .AddRoles<AppRole>()
@@ -142,12 +143,23 @@ builder.Services
         };
     });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 app.UseHttpsRedirection();
 
 // JWT Authentication
 app.UseRouting();
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -190,5 +202,3 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
-
-

@@ -37,7 +37,7 @@ public class AuthController : ControllerBase
         {
             return BadRequest(authResponse.Errors);
         }
-        return Ok(new { token = authResponse.Token });
+        return Ok(authResponse);
     }
     
     [Authorize]

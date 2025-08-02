@@ -16,6 +16,8 @@ public class InstagramDbContext : IdentityDbContext<AppUser, AppRole, Guid>
         public DbSet<Follow> Follows => Set<Follow>();
         public DbSet<Message> Messages => Set<Message>();
         public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<Story> Stories => Set<Story>();
+        public DbSet<StoryView> StoryViews => Set<StoryView>();   
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -39,8 +41,32 @@ public class InstagramDbContext : IdentityDbContext<AppUser, AppRole, Guid>
                 .HasQueryFilter(m => !m.IsDeleted && m.Sender.IsActive && !m.Sender.IsDeleted && m.Receiver.IsActive && !m.Receiver.IsDeleted);
             modelBuilder.Entity<Notification>()
                 .HasQueryFilter(n => !n.IsDeleted && n.Recipient.IsActive && !n.Recipient.IsDeleted);
+            modelBuilder.Entity<Story>()
+                .HasQueryFilter(s => s.ExpiresAt > DateTime.UtcNow);  
 
             // Relationships and delete behaviors
+
+            modelBuilder.Entity<Story>()
+                .HasOne(s => s.User)
+                .WithMany(u => u.Stories)
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            modelBuilder.Entity<StoryView>()
+                .HasKey(v => new { v.UserId, v.StoryId });
+
+            modelBuilder.Entity<StoryView>()
+                .HasOne(v => v.Story)
+                .WithMany(s => s.Views)
+                .HasForeignKey(v => v.StoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<StoryView>()
+                .HasOne(v => v.User)
+                .WithMany(u => u.StoryViews)
+                .HasForeignKey(v => v.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Post>()
                 .HasOne(p => p.Author)
                 .WithMany(u => u.Posts)
