@@ -63,7 +63,7 @@ graph LR
   API -->|Service Call| BL[Business Layer]
   BL -->|Repository| DAL[Data Access Layer]
   DAL -->|EF Core| DB[(PostgreSQL 17)]
-  ENT[Entities (Models/DTOs)]
+  ENT[Entities]
   BL -.-> ENT
   DAL -.-> ENT
 ```
