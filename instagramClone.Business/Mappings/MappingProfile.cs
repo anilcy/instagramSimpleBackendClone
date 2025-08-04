@@ -18,8 +18,27 @@ public class MappingProfile : Profile
         CreateMap<PostUpdateDto, Post>();
 
         // Comment mappings
+        // Entity → DTO
         CreateMap<Comment, CommentDto>()
-            .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.Author));
+            // Temel alanlar (Id, PostId, Content, CreatedAt) AutoMapper otomatik halleder
+            .ForMember(d => d.Author,
+                opt => opt.MapFrom(s => s.Author))               // yazar bilgisini al
+            .ForMember(d => d.ParentCommentId,
+                opt => opt.MapFrom(s => s.ParentCommentId))     // reply-to id
+            .ForMember(d => d.Replies,
+                opt => opt.MapFrom(s => s.Replies))             // alt yorumlar
+            .ForMember(d => d.RepliesCount,
+                opt => opt.MapFrom(s => s.Replies.Count));     // alt yorum sayısı
+
+        // DTO → Entity (yeni yorum eklerken)
+        CreateMap<CreateCommentDto, Comment>()
+            .ForMember(d => d.PostId,
+                opt => opt.MapFrom(s => s.PostId))
+            .ForMember(d => d.Content,
+                opt => opt.MapFrom(s => s.Content))
+            .ForMember(d => d.ParentCommentId,
+                opt => opt.MapFrom(s => s.ParentCommentId));
+
 
         // Story mappings
         CreateMap<Story, StoryDto>()

@@ -1,3 +1,5 @@
+using instagramClone.Entities.Dtos;
+
 namespace instagramClone.API.Controllers;
 
 using instagramClone.Business.Interfaces;
@@ -18,10 +20,10 @@ public class LikesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> ToggleLike(int postId)
+    public async Task<IActionResult> ToggleLike([FromBody] LikeActionDto dto)
     {
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
-        var isLiked = await _likeService.ToggleLikeAsync(postId, userId);
+        var isLiked = await _likeService.ToggleLikeAsync(dto.EntityId, userId);
         return Ok(new { success = true, liked = isLiked });
     }
 }
