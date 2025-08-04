@@ -19,12 +19,21 @@ namespace instagramClone.Business.Services
 
         public async Task<CommentDto> AddCommentAsync(CreateCommentDto dto, Guid userId)
         {
+            // Eğer parentId verilmişse, geçerli bir parent mı kontrol et
+            if (dto.ParentCommentId.HasValue)
+            {
+                var parent = await _commentRepository.GetByIdAsync(dto.ParentCommentId.Value);
+                if (parent == null || parent.PostId != dto.PostId)
+                    throw new ArgumentException("Invalid parent comment");
+            }
+
             var comment = new Comment
             {
                 PostId = dto.PostId,
                 Content = dto.Content,
                 AuthorId = userId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                ParentCommentId = dto.ParentCommentId
             };
 
             await _commentRepository.InsertAsync(comment);
@@ -32,6 +41,7 @@ namespace instagramClone.Business.Services
 
             return _mapper.Map<CommentDto>(comment);
         }
+
 
         public async Task<List<CommentDto>> GetCommentsByPostIdAsync(int postId)
         {

@@ -76,7 +76,11 @@ builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IStoryRepository, StoryRepository>();
-builder.Services.AddScoped<StoryService>();
+builder.Services.AddScoped<IStoryService, StoryService>();
+builder.Services.AddScoped<IFollowRepository, FollowRepository>();
+builder.Services.AddScoped<IFollowService, FollowService>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddIdentityCore<AppUser>(options => { })
     .AddRoles<AppRole>()

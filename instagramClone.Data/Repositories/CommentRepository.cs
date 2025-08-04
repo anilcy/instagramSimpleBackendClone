@@ -13,9 +13,12 @@ public class CommentRepository : GenericRepository<Comment>, ICommentRepository
     public async Task<List<Comment>> GetCommentsByPostIdAsync(int postId)
     {
         return await _context.Comments
-            .Where(c => c.PostId == postId)
+            .Where(c => c.PostId == postId && c.ParentCommentId == null)
             .Include(c => c.Author)
+            .Include(c => c.Replies)                // alt yorumları al
+                .ThenInclude(r => r.Author)         // alt yorum yazarlarını da al
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
     }
+
 }

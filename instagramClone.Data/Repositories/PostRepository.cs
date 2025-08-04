@@ -18,6 +18,8 @@ namespace instagramClone.Data.Repositories
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Include(p => p.Author)
+                .Include(p => p.Comments)
+                .Include(p => p.Likes)
                 .ToListAsync();
         }
 
@@ -25,6 +27,9 @@ namespace instagramClone.Data.Repositories
         {
             return await _context.Posts
                 .Include(p => p.Author)
+                .Include(p => p.Comments)
+                .ThenInclude(c => c.Author)
+                .Include(p => p.Likes)
                 .FirstOrDefaultAsync(p => p.Id == postId && p.AuthorId == userId && !p.IsDeleted);
         }
     }
