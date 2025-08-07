@@ -14,6 +14,7 @@ public class UserDto
     public DateTime CreatedAt { get; set; }
     public DateTime LastLoginDate { get; set; }
     public bool IsActive { get; set; }
+    public bool IsPrivate { get; set; }
     
     // Statistics
     public int PostsCount { get; set; }
@@ -30,4 +31,5 @@ public class UpdateUserProfileDto
     public string FullName { get; set; } = null!;
     public string? Bio { get; set; }
     public string? WebsiteUrl { get; set; }
+    public bool IsPrivate { get; set; }
 }

@@ -22,7 +22,7 @@ public class FollowsController : BaseController
     [HttpPost]
     public async Task<ActionResult<FollowDto>> FollowUser([FromBody] FollowActionDto followDto)
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = CurrentUserId;
         var follow = await _followService.FollowUserAsync(currentUserId, followDto.TargetUserId);
         return Ok(follow);
     }
@@ -30,7 +30,7 @@ public class FollowsController : BaseController
     [HttpDelete("{targetUserId:guid}")]
     public async Task<ActionResult> UnfollowUser(Guid targetUserId)
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = CurrentUserId;
         var result = await _followService.UnfollowUserAsync(currentUserId, targetUserId);
         
         if (result)
@@ -42,7 +42,7 @@ public class FollowsController : BaseController
     [HttpPost("requests/{requesterId:guid}/respond")]
     public async Task<ActionResult<FollowResponseDto>> RespondToFollowRequest(Guid requesterId, [FromBody] FollowStatus status)
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = CurrentUserId;
         var response = await _followService.RespondToFollowRequestAsync(currentUserId, requesterId, status);
         return Ok(response);
     }
@@ -50,7 +50,7 @@ public class FollowsController : BaseController
     [HttpGet("requests")]
     public async Task<ActionResult<List<FollowRequestDto>>> GetPendingFollowRequests()
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = CurrentUserId;
         var requests = await _followService.GetFollowRequestsAsync(currentUserId);
         return Ok(requests);
     }
@@ -72,14 +72,9 @@ public class FollowsController : BaseController
     [HttpGet("{targetUserId:guid}/status")]
     public async Task<ActionResult<FollowStatus?>> GetFollowStatus(Guid targetUserId)
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = CurrentUserId;
         var status = await _followService.GetFollowStatusAsync(currentUserId, targetUserId);
         return Ok(status);
     }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.Parse(userIdClaim!);
-    }
+    
 }

@@ -10,11 +10,13 @@ public class StoryService : IStoryService
 {
     private readonly IStoryRepository _storyRepo;
     private readonly IMapper _mapper;
+    private readonly IPrivacyService _privacyService;
 
-    public StoryService(IStoryRepository storyRepo, IMapper mapper)
+    public StoryService(IStoryRepository storyRepo, IMapper mapper, IPrivacyService privacyService)
     {
         _storyRepo = storyRepo;
         _mapper = mapper;
+        _privacyService = privacyService;
     }
 
     public async Task<StoryDto> CreateStoryAsync(Guid userId, StoryCreateDto dto)
@@ -30,9 +32,11 @@ public class StoryService : IStoryService
         return _mapper.Map<StoryDto>(story);
     }
 
-    public async Task<List<StoryDto>> GetUserActiveStoriesAsync(Guid userId, int page = 1, int pageSize = 20)
+    public async Task<List<StoryDto>> GetUserActiveStoriesAsync(Guid targetUserId, Guid? requesterId, int page = 1, int pageSize = 20)
     {
-        var stories = await _storyRepo.GetUserActiveStoriesAsync(userId, page, pageSize);
+        await _privacyService.EnsureCanAccessAsync(targetUserId, requesterId);
+
+        var stories = await _storyRepo.GetUserActiveStoriesAsync(targetUserId, page, pageSize);
         return _mapper.Map<List<StoryDto>>(stories);
     }
 
@@ -44,7 +48,11 @@ public class StoryService : IStoryService
 
     public async Task<bool> AddStoryViewAsync(int storyId, Guid viewerId)
     {
-        // Zaten izlediyse tekrar ekleme
+        var story = await _storyRepo.GetStoryAsync(storyId);
+        if (story == null)
+            return false;
+
+        await _privacyService.EnsureCanAccessAsync(story.UserId, viewerId);
         if (await _storyRepo.HasUserViewedStoryAsync(storyId, viewerId))
             return false;
 

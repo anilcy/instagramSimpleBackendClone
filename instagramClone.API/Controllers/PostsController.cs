@@ -1,7 +1,6 @@
 using instagramClone.Entities.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using instagramClone.Business.Interfaces;
 
 namespace instagramClone.API.Controllers
@@ -9,7 +8,7 @@ namespace instagramClone.API.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class PostsController : ControllerBase
+    public class PostsController : BaseController
     {
         private readonly IPostService _postService;
 
@@ -22,45 +21,17 @@ namespace instagramClone.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreatePost([FromForm] PostCreateDto dto)
         {
-            // Claim'leri filtreleme
-            var nameIdentifierClaims = User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).ToList();
-
-            if (nameIdentifierClaims.Count == 0)
-            {
-                Console.WriteLine("User ID claim not found.");
-                return BadRequest("Invalid user ID.");
-            }
-
-            var userIdString = nameIdentifierClaims.First().Value;
-            Console.WriteLine($"userIdString değeri: {userIdString}"); // Debug satırı
-
-            // Guid.TryParse
-            if (!Guid.TryParse(userIdString, out Guid userId))
-            {
-                Console.WriteLine($"Guid.TryParse failed for: {userIdString}");
-                return BadRequest("Invalid user ID format.");
-            }
-            Console.WriteLine($"Guid.TryParse user id: {userId}");
-            // Tüm claim'leri incele (Debug için)
-            foreach (var claim in User.Claims)
-            {
-                Console.WriteLine($"Claim Type: {claim.Type}, Value: {claim.Value}");
-            }
-
-            var result = await _postService.CreatePostAsync(dto, userId);
+            var result = await _postService.CreatePostAsync(dto, CurrentUserId);
             return Ok(result);
         }
-
-        // GET: api/posts?page=1&pageSize=20
+ 
+        // GET: api/posts?userId={userId}&page=1&pageSize=20
         [HttpGet]
-        public async Task<IActionResult> GetPosts([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        public async Task<IActionResult> GetPosts([FromQuery] Guid? userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(userIdString, out Guid userId))
-            {
-                return BadRequest("Invalid user ID.");
-            }
-            var posts = await _postService.GetPostsAsync(userId, page, pageSize);
+            var currentUserId = CurrentUserId;
+            var targetUserId = userId ?? currentUserId;
+            var posts = await _postService.GetPostsAsync(targetUserId, currentUserId, page, pageSize);
             return Ok(posts);
         }
         // To get the details of a post
@@ -68,12 +39,7 @@ namespace instagramClone.API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPostById(int id)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(userIdString, out Guid userId))
-            {
-                return BadRequest("Invalid user ID.");
-            }
-            var post = await _postService.GetPostByIdAsync(id, userId);
+            var post = await _postService.GetPostByIdAsync(id, CurrentUserId);
             return Ok(post);
         }
 
@@ -81,12 +47,7 @@ namespace instagramClone.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePost(int id, [FromForm] PostUpdateDto dto)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(userIdString, out Guid userId))
-            {
-                return BadRequest("Invalid user ID.");
-            }
-            var updatedPost = await _postService.UpdatePostAsync(id, dto, userId);
+            var updatedPost = await _postService.UpdatePostAsync(id, dto, CurrentUserId);
             return Ok(updatedPost);
         }
 
@@ -94,12 +55,7 @@ namespace instagramClone.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePost(int id)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(userIdString, out Guid userId))
-            {
-                return BadRequest("Invalid user ID.");
-            }
-            var success = await _postService.DeletePostAsync(id, userId);
+            var success = await _postService.DeletePostAsync(id, CurrentUserId);
             if (!success)
                 return NotFound("Post not found or already deleted.");
             return Ok("Post deleted successfully.");

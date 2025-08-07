@@ -21,7 +21,7 @@ public class UsersController : BaseController
     [HttpGet("{userId:guid}")]
     public async Task<ActionResult<UserDto>> GetUserProfile(Guid userId)
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = CurrentUserId;
         var user = await _userService.GetUserProfileAsync(userId, currentUserId);
         return Ok(user);
     }
@@ -29,7 +29,7 @@ public class UsersController : BaseController
     [HttpGet("username/{userName}")]
     public async Task<ActionResult<UserDto>> GetUserByUserName(string userName)
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = CurrentUserId;
         var user = await _userService.GetUserByUserNameAsync(userName, currentUserId);
         return Ok(user);
     }
@@ -37,7 +37,7 @@ public class UsersController : BaseController
     [HttpGet("me")]
     public async Task<ActionResult<UserDto>> GetMyProfile()
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = CurrentUserId;
         var user = await _userService.GetUserProfileAsync(currentUserId);
         return Ok(user);
     }
@@ -45,7 +45,7 @@ public class UsersController : BaseController
     [HttpPut("me")]
     public async Task<ActionResult<UserDto>> UpdateMyProfile([FromBody] UpdateUserProfileDto updateDto)
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = CurrentUserId;
         var user = await _userService.UpdateUserProfileAsync(currentUserId, updateDto);
         return Ok(user);
     }
@@ -56,10 +56,5 @@ public class UsersController : BaseController
         var users = await _userService.SearchUsersAsync(searchTerm, page, pageSize);
         return Ok(users);
     }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.Parse(userIdClaim!);
-    }
+    
 }

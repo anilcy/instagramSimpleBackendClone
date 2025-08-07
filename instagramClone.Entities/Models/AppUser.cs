@@ -16,6 +16,7 @@ public class AppUser : IdentityUser<Guid>
     // Account state flags
     public bool IsActive  { get; set; } = true;  // false = frozen
     public bool IsDeleted { get; set; } = false; // true  = permanently deleted
+    public bool IsPrivate { get; set; } = false; // true  = private account
 
     // Navigation
     public ICollection<Post> Posts { get; set; } = new List<Post>();

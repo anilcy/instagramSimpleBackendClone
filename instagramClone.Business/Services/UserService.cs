@@ -65,6 +65,7 @@ public class UserService : IUserService
         user.FullName = updateDto.FullName;
         user.Bio = updateDto.Bio;
         user.WebsiteUrl = updateDto.WebsiteUrl;
+        user.IsPrivate = updateDto.IsPrivate;
         user.UpdatedAt = DateTime.UtcNow;
 
         await _userRepository.UpdateAsync(user);

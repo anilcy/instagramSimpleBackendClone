@@ -38,7 +38,7 @@ public class StoryRepository : GenericRepository<Story>, IStoryRepository
 
         // IQueryable, henüz SQL’e çevrilmedi (deferred execution)
         var followingIds = _context.Follows
-            .Where(f => f.FollowerId == userId)
+            .Where(f => f.FollowerId == userId && f.Status == FollowStatus.Accepted)
             .Select(f => f.FollowedId);
 
         return await _context.Stories

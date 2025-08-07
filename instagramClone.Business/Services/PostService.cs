@@ -14,16 +14,19 @@ namespace instagramClone.Business.Services
         private readonly IFileStorageService _fileStorageService;
         private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
+        private readonly IPrivacyService _privacyService;
 
         public PostService(IPostRepository postRepository, 
                            IFileStorageService fileStorageService, 
                            IMapper mapper,
-                           UserManager<AppUser> userManager)
+                           UserManager<AppUser> userManager,
+                           IPrivacyService privacyService)
         {
             _postRepository = postRepository;
             _fileStorageService = fileStorageService;
             _mapper = mapper;
-            _userManager = userManager; 
+            _userManager = userManager;
+            _privacyService = privacyService;
         }
 
         public async Task<PostDto> CreatePostAsync(PostCreateDto dto, Guid userId)
@@ -56,9 +59,11 @@ namespace instagramClone.Business.Services
             return _mapper.Map<PostDto>(post);
         }
 
-        public async Task<List<PostDto>> GetPostsAsync(Guid userId, int page = 1, int pageSize = 20)
+        public async Task<List<PostDto>> GetPostsAsync(Guid targetUserId, Guid requesterId, int page = 1, int pageSize = 20)
         {
-            var posts = await _postRepository.GetPostsByUserIdAsync(userId, page, pageSize);
+            await _privacyService.EnsureCanAccessAsync(targetUserId, requesterId);
+
+            var posts = await _postRepository.GetPostsByUserIdAsync(targetUserId, page, pageSize);
             return _mapper.Map<List<PostDto>>(posts);
         }
 
