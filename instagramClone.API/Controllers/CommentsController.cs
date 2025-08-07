@@ -2,14 +2,13 @@ using instagramClone.Business.Interfaces;
 using instagramClone.Entities.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace instagramClone.API.Controllers
 {
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class CommentsController : ControllerBase
+    public class CommentsController : BaseController
     {
         private readonly ICommentService _commentService;
 
@@ -22,9 +21,7 @@ namespace instagramClone.API.Controllers
         [HttpPost]
         public async Task<IActionResult> AddComment([FromBody] CreateCommentDto dto)
         {
-            // JWT'den kullanıcı id'sini alıyoruz
-            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
-            var commentDto = await _commentService.AddCommentAsync(dto, userId);
+            var commentDto = await _commentService.AddCommentAsync(dto, CurrentUserId);
             return Ok(commentDto);
         }
 

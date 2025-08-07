@@ -2,7 +2,6 @@ using instagramClone.Business.Interfaces;
 using instagramClone.Entities.Dtos.Story;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace instagramClone.API.Controllers;
 
@@ -17,10 +16,6 @@ public class StoriesController : BaseController
     {
         _storyService = storyService;
     }
-
-    // Yardımcı fonksiyon: token’dan userId çek
-    private Guid CurrentUserId =>
-        Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     //Yeni hikâye ekle
     [HttpPost]
@@ -43,8 +38,20 @@ public class StoriesController : BaseController
     [AllowAnonymous]
     public async Task<IActionResult> GetUserStories(Guid userId, int page = 1, int pageSize = 20)
     {
-        var stories = await _storyService.GetUserActiveStoriesAsync(userId, page, pageSize);
-        return Ok(stories);
+        Guid? requesterId = null;
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            requesterId = CurrentUserId;
+        }
+        try
+        {
+            var stories = await _storyService.GetUserActiveStoriesAsync(userId, requesterId, page, pageSize);
+            return Ok(stories);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
     }
 
     //Takip + kendi feed
@@ -59,7 +66,14 @@ public class StoriesController : BaseController
     [HttpPost("{id:int}/view")]
     public async Task<IActionResult> ViewStory(int id)
     {
-        var added = await _storyService.AddStoryViewAsync(id, CurrentUserId);
-        return added ? Ok() : BadRequest("Story already viewed.");
+        try
+        {
+            var added = await _storyService.AddStoryViewAsync(id, CurrentUserId);
+            return added ? Ok() : BadRequest("Story already viewed.");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
     }
 }

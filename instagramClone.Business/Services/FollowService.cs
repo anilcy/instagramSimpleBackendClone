@@ -10,12 +10,15 @@ public class FollowService : IFollowService
 {
     private readonly IFollowRepository _followRepository;
     private readonly INotificationService _notificationService;
+    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
 
-    public FollowService(IFollowRepository followRepository, INotificationService notificationService, IMapper mapper)
+    public FollowService(IFollowRepository followRepository, INotificationService notificationService,
+        IUserRepository userRepository, IMapper mapper)
     {
         _followRepository = followRepository;
         _notificationService = notificationService;
+        _userRepository = userRepository;
         _mapper = mapper;
     }
 
@@ -28,19 +31,27 @@ public class FollowService : IFollowService
         if (existingFollow != null)
             throw new InvalidOperationException("Follow relationship already exists");
 
+        var targetUser = await _userRepository.GetByIdAsync(targetUserId);
+        if (targetUser == null)
+            throw new ArgumentException("Target user not found");
+        
         var follow = new Follow
         {
             FollowerId = currentUserId,
             FollowedId = targetUserId,
-            Status = FollowStatus.Accepted, // For now, auto-accept. Can be changed to Pending for private accounts
+            Status = targetUser.IsPrivate ? FollowStatus.Pending : FollowStatus.Accepted,
             CreatedAt = DateTime.UtcNow
         };
 
         await _followRepository.InsertAsync(follow);
         await _followRepository.SaveChangesAsync();
         
-        // Create notification
-        await _notificationService.CreateFollowNotificationAsync(currentUserId, targetUserId);
+
+        if (!targetUser.IsPrivate)
+        {
+            // Create notification immediately for public accounts
+            await _notificationService.CreateFollowNotificationAsync(currentUserId, targetUserId);
+        }
 
         return _mapper.Map<FollowDto>(follow);
     }
@@ -66,6 +77,11 @@ public class FollowService : IFollowService
         follow.DecidedAt = DateTime.UtcNow;
         await _followRepository.UpdateAsync(follow);
         await _followRepository.SaveChangesAsync();
+
+        if (status == FollowStatus.Accepted)
+        {
+            await _notificationService.CreateFollowNotificationAsync(follow.FollowerId, follow.FollowedId);
+        }
 
         return new FollowResponseDto
         {

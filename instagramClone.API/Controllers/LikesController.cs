@@ -5,12 +5,11 @@ namespace instagramClone.API.Controllers;
 using instagramClone.Business.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
-public class LikesController : ControllerBase
+public class LikesController : BaseController
 {
     private readonly ILikeService _likeService;
 
@@ -20,10 +19,9 @@ public class LikesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> ToggleLike([FromBody] LikeActionDto dto)
+    public async Task<IActionResult> ToggleLike(int postId)
     {
-        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
-        var isLiked = await _likeService.ToggleLikeAsync(dto.EntityId, userId);
+        var isLiked = await _likeService.ToggleLikeAsync(postId, CurrentUserId);
         return Ok(new { success = true, liked = isLiked });
     }
 }

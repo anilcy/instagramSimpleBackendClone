@@ -2,7 +2,6 @@ using instagramClone.Business.Interfaces;
 using instagramClone.Entities.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace instagramClone.API.Controllers;
 
@@ -21,38 +20,29 @@ public class NotificationsController : BaseController
     [HttpGet]
     public async Task<ActionResult<List<NotificationDto>>> GetNotifications([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var currentUserId = GetCurrentUserId();
-        var notifications = await _notificationService.GetUserNotificationsAsync(currentUserId, page, pageSize);
+        var notifications = await _notificationService.GetUserNotificationsAsync(CurrentUserId, page, pageSize);
         return Ok(notifications);
     }
 
     [HttpGet("unread-count")]
     public async Task<ActionResult<int>> GetUnreadNotificationsCount()
     {
-        var currentUserId = GetCurrentUserId();
-        var count = await _notificationService.GetUnreadNotificationsCountAsync(currentUserId);
+        var count = await _notificationService.GetUnreadNotificationsCountAsync(CurrentUserId);
         return Ok(count);
     }
 
     [HttpPut("{notificationId:int}/read")]
     public async Task<ActionResult> MarkNotificationAsRead(int notificationId)
     {
-        var currentUserId = GetCurrentUserId();
-        await _notificationService.MarkNotificationAsReadAsync(notificationId, currentUserId);
+        await _notificationService.MarkNotificationAsReadAsync(notificationId, CurrentUserId);
         return NoContent();
     }
 
     [HttpPut("mark-all-read")]
     public async Task<ActionResult> MarkAllNotificationsAsRead()
     {
-        var currentUserId = GetCurrentUserId();
-        await _notificationService.MarkAllNotificationsAsReadAsync(currentUserId);
+        await _notificationService.MarkAllNotificationsAsReadAsync(CurrentUserId);
         return NoContent();
     }
-
-    private Guid GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.Parse(userIdClaim!);
-    }
+    
 }
