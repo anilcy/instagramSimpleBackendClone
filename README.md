@@ -73,26 +73,25 @@ graph LR
 ```mermaid
 %%{ init: { "er": { "attributeStyle": "label" } } }%%
 erDiagram
-    %% ENUM: follow_status = Pending | Accepted | Rejected
-
     AppUser {
         GUID     Id PK
         string   FullName
-        string   ProfilePictureUrl
-        string   Bio
-        string   WebsiteUrl
+        string  ProfilePictureUrl
+        string  Bio
+        string  WebsiteUrl
         datetime CreatedAt
         datetime UpdatedAt
         datetime LastLoginDate
         boolean  IsActive
         boolean  IsDeleted
+        boolean  IsPrivate
     }
 
     Post {
         int      Id PK
         GUID     AuthorId FK
         string   ImageUrl
-        string   Caption
+        string  Caption
         datetime CreatedAt
         datetime ModifiedAt
         boolean  IsDeleted
@@ -103,15 +102,8 @@ erDiagram
         int      Id PK
         int      PostId FK
         GUID     AuthorId FK
-        int      ParentCommentId FK
+        int     ParentCommentId FK
         string   Content
-        datetime CreatedAt
-        boolean  IsDeleted
-    }
-
-    CommentLike {
-        GUID     UserId PK, FK
-        int      CommentId PK, FK
         datetime CreatedAt
         boolean  IsDeleted
     }
@@ -123,13 +115,20 @@ erDiagram
         boolean  IsDeleted
     }
 
+    CommentLike {
+        GUID     UserId PK, FK
+        int      CommentId PK, FK
+        datetime CreatedAt
+        boolean  IsDeleted
+    }
+
     Follow {
         GUID     FollowerId PK, FK
         GUID     FollowedId PK, FK
         datetime CreatedAt
         datetime DecidedAt
         boolean  IsDeleted
-        string   Status "FK to follow_status enum"
+        FollowStatus Status
     }
 
     Message {
@@ -145,15 +144,15 @@ erDiagram
     Notification {
         int      Id PK
         GUID     RecipientId FK
-        string   Type
+        NotificationType Type
         string   Message
-        string   ActionUrl
+        string  ActionUrl
         boolean  IsRead
         datetime CreatedAt
         boolean  IsDeleted
-        GUID     ActorId FK
-        int      PostId FK
-        int      CommentId FK
+        GUID    ActorId FK
+        int     PostId FK
+        int     CommentId FK
     }
 
     Story {
@@ -165,35 +164,33 @@ erDiagram
     }
 
     StoryView {
-        int      Id PK
-        int      StoryId FK
-        GUID     UserId FK
+        GUID     UserId PK, FK
+        int      StoryId PK, FK
         datetime ViewedAt
     }
 
-    %% --- Relationships ---
-    AppUser  ||--o{ Post        : writes
-    AppUser  ||--o{ Comment     : writes
-    AppUser  ||--o{ PostLike    : likes
-    AppUser  ||--o{ CommentLike : likes
-    AppUser  ||--o{ Follow      : follows
-    Follow   }o--|| AppUser     : followed_user
-    AppUser  ||--o{ Message     : sends
-    AppUser  ||--o{ Message     : receives
-    AppUser  ||--o{ Notification: recipient
-    AppUser  ||--o{ Notification: actor
-    AppUser  ||--o{ Story       : stories
-    AppUser  ||--o{ StoryView   : views
+    %% Relationships
+    AppUser ||--o{ Post        : authored
+    AppUser ||--o{ Comment     : writes
+    AppUser ||--o{ PostLike    : likes
+    AppUser ||--o{ CommentLike : likes
+    AppUser ||--o{ Follow      : follows
+    Follow  }o--|| AppUser     : followed
+    AppUser ||--o{ Message     : sends
+    AppUser ||--o{ Message     : receives
+    AppUser ||--o{ Notification: notified
+    AppUser ||--o{ Story       : posts
+    AppUser ||--o{ StoryView   : viewer
 
-    Post     ||--|{ Comment     : has
-    Post     ||--o{ PostLike    : liked_by
-    Post     ||--o{ Notification: involved
+    Post    ||--o{ Comment     : has
+    Post    ||--o{ PostLike    : liked
+    Post    ||--o{ Notification: involved
 
-    Comment  ||--o{ Comment     : replies
-    Comment  ||--o{ CommentLike : liked_by
-    Comment  ||--o{ Notification: involved
+    Comment ||--o{ Comment     : replies
+    Comment ||--o{ CommentLike : liked
+    Comment ||--o{ Notification: involved
 
-    Story    ||--o{ StoryView   : viewed_by
+    Story   ||--o{ StoryView   : viewed
 ```
 
 ---
