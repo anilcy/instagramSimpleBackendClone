@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:17
+    container_name: instaclone_db
+    environment:
+      POSTGRES_DB: instaclone
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"   # change to "5433:5432" if 5432 is occupied on your host
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d instaclone"]
+      interval: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: instagramClone.API/Dockerfile
+    container_name: instaclone_api
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env            # must contain DB_CONNECTION_STRING=Host=db;Port=5432;Database=instaclone;Username=postgres;Password=postgres
+    ports:
+      - "5005:8080"
+      - "5006:8081"
+    restart: unless-stopped
+
+volumes:
+  db_data:

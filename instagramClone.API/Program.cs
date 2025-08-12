@@ -93,19 +93,26 @@ builder.Services.AddIdentityCore<AppUser>(options => { })
 // Load .env
 Env.Load();
 builder.Configuration.AddEnvironmentVariables();
-var connectionString = Env.GetString("DB_CONNECTION_STRING");
-Console.WriteLine($"🔹 JWT_KEY: {Env.GetString("JWT_KEY")}");
-Console.WriteLine($"🔹 JWT_ISSUER: {Env.GetString("JWT_ISSUER")}");
-Console.WriteLine($"🔹 JWT_AUDIENCE: {Env.GetString("JWT_AUDIENCE")}");
+
+// HİBRİT GETTER: önce .env (Env.GetString), yoksa gerçek environment
+string GetEnv(string k) =>
+    Env.GetString(k) ?? Environment.GetEnvironmentVariable(k)
+    ?? throw new Exception($"⚠️ {k} not found in .env or environment variables");
+
+var connectionString =
+    Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("DB_CONNECTION_STRING not found.");
+
 
 // DbContext added to services
 builder.Services.AddDbContext<InstagramDbContext>(options =>
     options.UseNpgsql(connectionString, b => b.MigrationsAssembly("instagramClone.Data")));
 
 // JWT Yapılandırması
-var jwtKey = Env.GetString("JWT_KEY") ?? throw new Exception("⚠️ JWT_KEY not found in .env");
-var jwtIssuer = Env.GetString("JWT_ISSUER") ?? throw new Exception("⚠️ JWT_ISSUER not found in .env");
-var jwtAudience = Env.GetString("JWT_AUDIENCE") ?? throw new Exception("⚠️ JWT_AUDIENCE not found in .env");
+var jwtKey      = GetEnv("JWT_KEY");
+var jwtIssuer   = GetEnv("JWT_ISSUER");
+var jwtAudience = GetEnv("JWT_AUDIENCE");
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 
 builder.Services
@@ -162,6 +169,14 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Apply migrations only in Development
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<InstagramDbContext>();
+    db.Database.Migrate();
+}
+
 app.UseHttpsRedirection();
 
 // JWT Authentication
@@ -182,9 +197,6 @@ using (var conn = new NpgsqlConnection(connectionString))
         Console.WriteLine($"✅ PostgreSQL version: {version}");
     }
 }
-
-// DbContext
-app.Services.CreateScope().ServiceProvider.GetRequiredService<InstagramDbContext>();
 
 
 // Kök isteği / → /scalar/v1 yönlendir
