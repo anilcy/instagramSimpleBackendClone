@@ -15,6 +15,9 @@ obj/
 
 .env
 .env.local
+instagramClone.API/.env
+instagramClone.API/.env.local
+instagramClone.API/.env.docker
 
 /uploads/
 *.jpg
