@@ -11,6 +11,7 @@
 3. [Tech Stack](#tech-stack)
 4. [Architecture](#architecture)
 5. [API Reference](#api-reference)
+6. [Docker Support](#docker-support)
 
 ---
 
@@ -34,7 +35,7 @@ Everything is built with **.NET 9** and follows a clean, layered architecture so
 * **Identity**-based authentication with JWT & refresh tokens.
 * **Follow, like, comment, story, message** domains implemented.
 * **Soft-delete & audit fields** on all entities.
-* **OpenAPI / Swagger** UI generated automatically.
+* **Scalar API Reference UI** generated automatically.
 * **Mermaid ER diagram** committed for instant DB insight.
 
 
@@ -207,6 +208,73 @@ erDiagram
 | POST   | `/api/v1/posts`           | Create a post                  |
 | GET    | `/api/v1/posts/{id}`      | Get a single post              |
 | POST   | `/api/v1/posts/{id}/like` | Like a post                    |
-| ...    | ...                       | *(see Swagger for all routes)* |
+| ...    | ...                       | *(see Scalar API Reference for all routes)* |
 
-Full, always-up-to-date docs live at `/swagger`.
+Full, always-up-to-date docs live at `/scalar/v1`.
+
+---
+
+## Docker Support
+
+This project comes with **Docker Compose** support to run both API and PostgreSQL DB in development.
+
+### Development
+
+Start containers:
+
+```bash
+docker compose up --build
+```
+
+- **API** → [http://localhost:5005/scalar/v1](http://localhost:5005/scalar/v1)
+- **DB** → Host: `db`, Port: `5433`
+
+---
+
+### Example `.env.example`
+
+```env
+DB_CONNECTION_STRING=Host=db;Port=5432;Database=instaclone;Username=postgres;Password=postgres
+
+JWT__Issuer=https://localhost
+JWT__Audience=instaclone
+JWT__Key=change-this-dev-only-key
+
+ASPNETCORE_ENVIRONMENT=Development
+
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=instaclone
+```
+
+The `db` host is used **inside** the Docker network.  
+From your host machine, connect to `localhost:5433`.
+
+---
+
+## Useful Commands
+
+### Stop and remove containers, networks, and volumes:
+
+```bash
+docker compose down -v
+```
+
+### Rebuild and start fresh:
+
+```bash
+docker compose up --build
+```
+
+### View container logs:
+
+```bash
+docker compose logs -f
+```
+
+### Access the database via psql (from host):
+
+```bash
+psql -h localhost -p 5433 -U postgres -d instaclone
+```
+
