@@ -1,6 +1,6 @@
 # Instagram Clone – Backend API
 
-> *An ASP.NET Core backend that powers an Instagram-style social media app: posts, stories, likes, follows, DMs, and notifications.*
+> *An ASP.NET Core backend that powers an Instagram-style social media app: posts, stories, likes, follows, DMs (real time), and notifications.*
 
 ---
 
@@ -22,7 +22,7 @@ This project is the **backend service** for an Instagram-like application. It ex
 * register & authenticate users,
 * publish posts and stories with media uploads,
 * like, comment, and follow other users,
-* exchange direct messages,
+* exchange direct messages with real-time SignalR (WebSockets, presence, typing, read receipts),
 * receive real-time notifications.
 
 Everything is built with **.NET 9** and follows a clean, layered architecture so it can grow pain-free.
@@ -138,6 +138,7 @@ erDiagram
         GUID     ReceiverId FK
         string   Content
         datetime CreatedAt
+        datetime ReadAt
         boolean  IsRead
         boolean  IsDeleted
     }
