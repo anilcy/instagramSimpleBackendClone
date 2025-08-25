@@ -15,11 +15,52 @@ using instagramClone.Data.Interfaces;
 using instagramClone.Data.Repositories;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
+using StackExchange.Redis;           
+using instagramClone.API.Realtime;      
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// Load .env
+Env.Load();
+builder.Configuration.AddEnvironmentVariables();
+
+// HİBRİT GETTER: önce .env (Env.GetString), yoksa gerçek environment
+string GetEnv(string k) =>
+    Env.GetString(k) ?? Environment.GetEnvironmentVariable(k)
+    ?? throw new Exception($"⚠️ {k} not found in .env or environment variables");
+
+
+// Redis connection (env: REDIS_CONNECTION)
+// Örn: Docker'da "redis:6379,abortConnect=false", lokalde "localhost:6379,abortConnect=false"
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var redisConn = GetEnv("REDIS_CONNECTION");
+    return ConnectionMultiplexer.Connect(redisConn);
+});
+
+
+/*
+// Presence service (Redis üstünden online/lastSeen)
+builder.Services.AddSingleton<IPresenceService, PresenceService>();
+
+
+// SignalR scale-out (çoklu API replika için)
+builder.Services.AddSignalR().AddStackExchangeRedis(GetEnv("REDIS_CONNECTION"), opts =>
+{
+    opts.Configuration.ChannelPrefix = "instaclone";
+});
+*/
+
+builder.Services.AddSingleton<IPresenceService, InMemoryPresenceService>(); // In-memory
+
+builder.Services.AddSignalR(o =>
+{
+    o.EnableDetailedErrors = true;
+});
+
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -84,20 +125,15 @@ builder.Services.AddScoped<IFollowService, FollowService>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPrivacyService, PrivacyService>();
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+builder.Services.AddScoped<IMessageService, MessageService>();
+
 
 builder.Services.AddIdentityCore<AppUser>(options => { })
     .AddRoles<AppRole>()
     .AddEntityFrameworkStores<InstagramDbContext>()
     .AddDefaultTokenProviders();
- 
-// Load .env
-Env.Load();
-builder.Configuration.AddEnvironmentVariables();
 
-// HİBRİT GETTER: önce .env (Env.GetString), yoksa gerçek environment
-string GetEnv(string k) =>
-    Env.GetString(k) ?? Environment.GetEnvironmentVariable(k)
-    ?? throw new Exception($"⚠️ {k} not found in .env or environment variables");
 
 var connectionString =
     Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
@@ -145,6 +181,7 @@ builder.Services
             OnMessageReceived = context =>
             {
                 var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+                // 1) Normal Authorization header'dan al
                 if (!string.IsNullOrEmpty(authHeader))
                 {
                     if (authHeader.StartsWith("Bearer "))
@@ -152,6 +189,18 @@ builder.Services
                     else
                         context.Token = authHeader;
                 }
+                
+                // 2) SignalR için query-string'ten token’a izin ver (WebSocket/SSE)
+                if (string.IsNullOrEmpty(context.Token))
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/chat"))
+                    {
+                        context.Token = accessToken;
+                    }
+                }
+                
                 return Task.CompletedTask;
             }
         };
@@ -164,6 +213,12 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin()
             .AllowAnyMethod()
             .AllowAnyHeader();
+        
+        options.AddPolicy("SignalRDev", p =>
+            p.WithOrigins("http://localhost:8088")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials());
     });
 });
 
@@ -186,6 +241,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// SignalR Chat Hub
+app.MapHub<ChatHub>("/hubs/chat")
+    .RequireAuthorization()
+    .RequireCors("SignalRDev");
 
 // PostgreSQL connection test
 using (var conn = new NpgsqlConnection(connectionString))

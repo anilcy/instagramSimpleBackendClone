@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SignalR DM Test</title>
+  <script src="./signalr.min.js"></script>
+</head>
+<body>
+  <div>
+    <label>BASE:</label>
+    <input id="base" value="http://localhost:5230" style="width:400px" />
+  </div>
+  <div>
+    <label>Token:</label>
+    <input id="token" placeholder="paste JWT" style="width:600px" />
+    <button id="connect">Connect</button>
+  </div>
+  <div>
+    <label>To (GUID):</label>
+    <input id="to" style="width:400px" />
+  </div>
+  <div>
+    <label>Msg:</label>
+    <input id="text" style="width:400px" />
+    <button id="send">Send</button>
+  </div>
+  <pre id="log"></pre>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const log = (...a) => { $('log').textContent += a.join(' ') + '\n'; };
+
+    log('SignalR loaded?', !!window.signalR);
+
+    let conn;
+
+    $('connect').onclick = async () => {
+      const base = $('base').value.replace(/\/+$/,'');
+      const token = $('token').value.trim();
+      const url = `${base}/hubs/chat?access_token=${encodeURIComponent(token)}`;
+      log('connecting to', url);
+
+      try {
+        conn = new signalR.HubConnectionBuilder()
+          .withUrl(url)
+          .withAutomaticReconnect()
+          .configureLogging(signalR.LogLevel.Information)
+          .build();
+
+        conn.on("presence:me", p => log('presence:me', JSON.stringify(p)));
+        conn.on("dm:new",      m => log('dm:new', JSON.stringify(m)));
+        conn.on("dm:sent",     m => log('dm:sent', JSON.stringify(m)));
+        conn.on("dm:typing",   p => log('dm:typing', JSON.stringify(p)));
+        conn.on("dm:read:conversation", p => log('dm:read:conversation', JSON.stringify(p)));
+
+        conn.onclose(err => log('closed', err?.message||''));
+        conn.onreconnecting(err => log('reconnecting', err?.message||''));
+        conn.onreconnected(id => log('reconnected', id||''));
+
+        await conn.start();
+        log('CONNECTED');
+      } catch (e) {
+        log('Connection error:', e?.message || e);
+        console.error(e);
+      }
+    };
+
+    $('send').onclick = async () => {
+      if (!conn || conn.state !== 'Connected') { alert('connect first'); return; }
+      try {
+        await conn.invoke('SendMessage', $('to').value.trim(), $('text').value.trim());
+        log('invoke ok');
+      } catch (e) {
+        log('invoke error:', e?.message || e);
+        console.error(e);
+      }
+    };
+  </script>
+</body>
+</html>

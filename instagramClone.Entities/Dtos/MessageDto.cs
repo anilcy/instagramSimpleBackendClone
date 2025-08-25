@@ -8,6 +8,7 @@ public class MessageDto
     public string Content { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
     public bool IsRead { get; set; }
+    public DateTime? ReadAt { get; set; }
     
     public UserSummaryDto Sender { get; set; } = null!;
     public UserSummaryDto Receiver { get; set; } = null!;

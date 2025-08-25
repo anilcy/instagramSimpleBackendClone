@@ -34,5 +34,13 @@ services:
       - "5006:8081"
     restart: unless-stopped
 
+  
+  redis:
+    image: redis:7
+    container_name: instagramclone-redis
+    ports:
+      - "6379:6379"
+    restart: always
+
 volumes:
   db_data:

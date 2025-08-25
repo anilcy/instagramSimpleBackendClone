@@ -52,6 +52,14 @@ public class InstagramDbContext : IdentityDbContext<AppUser, AppRole, Guid>
                 .HasForeignKey(s => s.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
             
+            // Story sadece süresi dolmamış olanlar
+            modelBuilder.Entity<Story>()
+                .HasQueryFilter(s => s.ExpiresAt > DateTime.UtcNow);
+
+            // StoryView de aynı mantıkla, bağlı olduğu Story süresi dolmamışsa gelsin
+            modelBuilder.Entity<StoryView>()
+                .HasQueryFilter(v => v.Story.ExpiresAt > DateTime.UtcNow);
+            
             modelBuilder.Entity<StoryView>()
                 .HasKey(v => new { v.UserId, v.StoryId });
 

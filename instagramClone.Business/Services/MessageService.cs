@@ -17,60 +17,54 @@ public class MessageService : IMessageService
         _mapper = mapper;
     }
 
-    public async Task<MessageDto> SendMessageAsync(Guid senderId, CreateMessageDto messageDto)
+    public async Task<MessageDto> SendMessageAsync(Guid senderId, CreateMessageDto dto)
     {
-        var message = new Message
+        var msg = new Message
         {
             SenderId = senderId,
-            ReceiverId = messageDto.ReceiverId,
-            Content = messageDto.Content,
-            CreatedAt = DateTime.UtcNow
+            ReceiverId = dto.ReceiverId,
+            Content = dto.Content,
+            CreatedAt = DateTime.UtcNow,
+            IsRead = false
         };
 
-        await _messageRepository.InsertAsync(message);
+        await _messageRepository.InsertAsync(msg);
         await _messageRepository.SaveChangesAsync();
-        return _mapper.Map<MessageDto>(message);
+
+        return _mapper.Map<MessageDto>(msg);
     }
 
     public async Task<List<MessageDto>> GetConversationAsync(Guid userId, Guid otherUserId, int page = 1, int pageSize = 50)
     {
-        var messages = await _messageRepository.GetConversationAsync(userId, otherUserId, page, pageSize);
-        return _mapper.Map<List<MessageDto>>(messages);
+        var msgs = await _messageRepository.GetConversationAsync(userId, otherUserId, page, pageSize);
+        return _mapper.Map<List<MessageDto>>(msgs);
     }
 
-    public async Task<List<ConversationDto>> GetConversationsAsync(Guid userId)
+    public async Task<MessageDto?> GetByIdAsync(int id)
     {
-        var messages = await _messageRepository.GetConversationsAsync(userId);
-        var conversations = new List<ConversationDto>();
-
-        var groupedMessages = messages.GroupBy(m => m.SenderId == userId ? m.ReceiverId : m.SenderId);
-
-        foreach (var group in groupedMessages)
-        {
-            var otherUserId = group.Key;
-            var lastMessage = group.OrderByDescending(m => m.CreatedAt).First();
-            var unreadCount = await _messageRepository.GetUnreadMessagesCountAsync(userId, otherUserId);
-
-            var conversation = new ConversationDto
-            {
-                OtherUser = _mapper.Map<UserSummaryDto>(lastMessage.SenderId == userId ? lastMessage.Receiver : lastMessage.Sender),
-                LastMessage = _mapper.Map<MessageDto>(lastMessage),
-                UnreadCount = unreadCount
-            };
-
-            conversations.Add(conversation);
-        }
-
-        return conversations.OrderByDescending(c => c.LastMessage?.CreatedAt).ToList();
+        var msg = await _messageRepository.GetByIdAsync(id);
+        return _mapper.Map<MessageDto?>(msg);
     }
+
+    public async Task<bool> MarkAsReadAsync(int messageId, Guid readerId)
+    {
+        var msg = await _messageRepository.GetByIdAsync(messageId);
+        if (msg == null || msg.ReceiverId != readerId) return false;
+
+        msg.IsRead = true;
+        msg.ReadAt = DateTime.UtcNow;
+
+        await _messageRepository.UpdateAsync(msg);
+        await _messageRepository.SaveChangesAsync();
+
+        return true;
+    }
+
+    public Task<int> GetUnreadCountAsync(Guid userId, Guid fromUserId)
+        => _messageRepository.GetUnreadMessagesCountAsync(userId, fromUserId);
 
     public async Task MarkMessagesAsReadAsync(Guid userId, Guid fromUserId)
     {
         await _messageRepository.MarkMessagesAsReadAsync(userId, fromUserId);
-    }
-
-    public async Task<int> GetUnreadMessagesCountAsync(Guid userId, Guid fromUserId)
-    {
-        return await _messageRepository.GetUnreadMessagesCountAsync(userId, fromUserId);
     }
 }

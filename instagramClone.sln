@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "instagramClone.Business", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "instagramClone.API", "instagramClone.API\instagramClone.API.csproj", "{348F2140-C625-496E-A5C2-959B73E8E059}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "instagramClone.Tests", "instagramClone.Tests\instagramClone.Tests.csproj", "{86C82193-5B2A-4C44-9A05-DD0595FDCDEA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{348F2140-C625-496E-A5C2-959B73E8E059}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{348F2140-C625-496E-A5C2-959B73E8E059}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{348F2140-C625-496E-A5C2-959B73E8E059}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86C82193-5B2A-4C44-9A05-DD0595FDCDEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86C82193-5B2A-4C44-9A05-DD0595FDCDEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86C82193-5B2A-4C44-9A05-DD0595FDCDEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86C82193-5B2A-4C44-9A05-DD0595FDCDEA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
