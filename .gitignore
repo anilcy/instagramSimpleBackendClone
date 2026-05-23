@@ -15,13 +15,12 @@ obj/
 
 .env
 .env.local
-instagramClone.API/.env
-instagramClone.API/.env.local
-instagramClone.API/.env.docker
+SocialMediaPlatform.API/.env
+SocialMediaPlatform.API/.env.local
+SocialMediaPlatform.API/.env.docker
 
 /uploads/
 *.jpg
 *.png
 *.jpeg
 *.gif
-InstagramCloneRN/

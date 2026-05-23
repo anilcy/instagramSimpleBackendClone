@@ -1,6 +1,6 @@
-# Instagram Clone – Backend API
+# Social Media Platform – Backend API
 
-> *An ASP.NET Core backend that powers an Instagram-style social media app: posts, stories, likes, follows, DMs (real time), and notifications.*
+> *An ASP.NET Core backend that powers a modern social media platform: posts, stories, likes, follows, DMs (real time), and notifications.*
 
 ---
 
@@ -17,7 +17,7 @@
 
 ## Overview
 
-This project is the **backend service** for an Instagram-like application. It exposes a RESTful API that lets clients:
+This project is the **backend service** for a social media platform. It exposes a RESTful API that lets clients:
 
 * register & authenticate users,
 * publish posts and stories with media uploads,
@@ -238,14 +238,14 @@ docker compose up --build
 DB_CONNECTION_STRING=Host=db;Port=5432;Database=instaclone;Username=postgres;Password=postgres
 
 JWT__Issuer=https://localhost
-JWT__Audience=instaclone
+JWT__Audience=socialmedia
 JWT__Key=change-this-dev-only-key
 
 ASPNETCORE_ENVIRONMENT=Development
 
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
-POSTGRES_DB=instaclone
+POSTGRES_DB=socialmedia
 ```
 
 The `db` host is used **inside** the Docker network.  
@@ -276,6 +276,6 @@ docker compose logs -f
 ### Access the database via psql (from host):
 
 ```bash
-psql -h localhost -p 5433 -U postgres -d instaclone
+psql -h localhost -p 5433 -U postgres -d socialmedia
 ```
 
