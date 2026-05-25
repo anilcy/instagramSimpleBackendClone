@@ -39,12 +39,12 @@ public class Comment
     public bool IsDeleted { get; private set; } 
     
     //Navigation Properties
-    public AppUser Author { get; set; } = null!;
-    public Post Post { get; set; } = null!;
+    public AppUser Author { get; private set; } = null!;
+    public Post Post { get; private set; } = null!;
     public Comment? Parent { get; private set; }
         
-    public ICollection<Comment> Replies { get; set; } = new List<Comment>();
-    public ICollection<CommentLike> Likes { get; set; } = new List<CommentLike>();
+    public ICollection<Comment> Replies { get; private set; } = new List<Comment>();
+    public ICollection<CommentLike> Likes { get; private set; } = new List<CommentLike>();
     
     public void UpdateContent(string newContent)
     {
@@ -56,6 +56,8 @@ public class Comment
     
     public void SoftDelete()
     {
+        if (IsDeleted)
+            return;
         IsDeleted = true;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
