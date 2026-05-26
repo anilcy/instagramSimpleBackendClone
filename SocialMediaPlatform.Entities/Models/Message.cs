@@ -1,17 +1,70 @@
+using System;
+
 namespace SocialMediaPlatform.Entities.Models;
 
 public class Message
 {
-    public int Id { get; set; }
-    public Guid SenderId { get; set; }
-    public Guid ReceiverId { get; set; }
-    public string Content { get; set; } = null!;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public Message (Guid senderId, Guid receiverId, string content)
+    {
+        if (senderId == Guid.Empty)
+            throw new ArgumentException("Invalid sender id.", nameof(senderId));
+        
+        if (receiverId == Guid.Empty)
+            throw new ArgumentException("Invalid receiver id.", nameof(receiverId));
+        
+        if (senderId == receiverId)
+            throw new ArgumentException("Sender and receiver cannot be the same.");
+        
+        if (string.IsNullOrWhiteSpace(content))
+            throw new ArgumentException("Content cannot be empty.", nameof(content));
+        
+        SenderId = senderId;
+        ReceiverId = receiverId;
+        Content = content;
+        CreatedAt = DateTimeOffset.UtcNow;
+        IsDeleted = false;
+        IsRead = false;
+    }
+    private Message() { }
+    
+    public Guid Id { get; private set; }
+    public Guid SenderId { get; private set; }
+    public Guid ReceiverId { get; private set; }
+    public string Content { get; private set; } 
+    public DateTimeOffset CreatedAt { get; private set; } 
+    public DateTimeOffset? ReadAt { get; private set; } 
+    public DateTimeOffset? UpdatedAt { get; private set; }
+    
+    //Status flags
+    public bool IsRead { get; private set; } 
+    public bool IsDeleted { get; private set; } 
+    
 
-    public bool IsRead { get; set; } = false;
-    public DateTime? ReadAt { get; set; } // 👈 add this
-    public bool IsDeleted { get; set; } = false;
-
-    public AppUser Receiver { get; set; } = null!;
-    public AppUser Sender { get; set; } = null!;
+  
+    //Navigation properties 
+    public AppUser Receiver { get; private set; } = null!;
+    public AppUser Sender { get; private set; } = null!;
+    
+    public void MarkAsRead()
+    {
+        if (IsRead)
+            return;
+        IsRead = true;
+        ReadAt = DateTimeOffset.UtcNow; 
+    }
+    public void EditMessage (string newContent)
+    {
+        if (string.IsNullOrWhiteSpace(newContent))
+            throw new ArgumentException("Content cannot be empty.", nameof(newContent));
+        Content = newContent;
+        
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+    public void SoftDeleteMessage()
+    {
+        if (IsDeleted)
+            return;
+        IsDeleted = true;
+    }
+    
 }

@@ -56,7 +56,7 @@ public class Comment
         UpdatedAt = DateTimeOffset.UtcNow;
     }
     
-    public void SoftDelete()
+    public void SoftDeleteComment()
     {
         if (IsDeleted)
             return;
