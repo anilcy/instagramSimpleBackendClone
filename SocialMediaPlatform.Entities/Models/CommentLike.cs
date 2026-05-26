@@ -1,3 +1,5 @@
+using System;
+
 namespace SocialMediaPlatform.Entities.Models;
 
 public class CommentLike
