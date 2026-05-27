@@ -7,10 +7,10 @@ public class PostLike
     public PostLike(Guid userId, Guid postId)
     {
         if (userId == Guid.Empty)
-            throw new ArgumentException("Invalid user id.", nameof(userId));
+            throw new ArgumentException("User Id cannot be empty.", nameof(userId));
 
         if (postId == Guid.Empty)
-            throw new ArgumentException("Invalid post id.", nameof(postId));
+            throw new ArgumentException("Post Id cannot be empty.", nameof(postId));
 
         UserId = userId;
         PostId = postId;

@@ -10,10 +10,10 @@ public class Comment
     {
         // Guid id will be created automatically by database
         if (postId == Guid.Empty)
-            throw new ArgumentException("Invalid post id.", nameof(postId));
+            throw new ArgumentException("Post Id cannot be empty.", nameof(postId));
 
         if (authorId == Guid.Empty)
-            throw new ArgumentException("Invalid author id.", nameof(authorId));
+            throw new ArgumentException("Author Id cannot be empty.", nameof(authorId));
 
         if (string.IsNullOrWhiteSpace(content))
             throw new ArgumentException("Content cannot be empty.", nameof(content));

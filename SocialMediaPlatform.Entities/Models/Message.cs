@@ -7,10 +7,10 @@ public class Message
     public Message (Guid senderId, Guid receiverId, string content)
     {
         if (senderId == Guid.Empty)
-            throw new ArgumentException("Invalid sender id.", nameof(senderId));
+            throw new ArgumentException("Sender Id cannot be empty.", nameof(senderId));
         
         if (receiverId == Guid.Empty)
-            throw new ArgumentException("Invalid receiver id.", nameof(receiverId));
+            throw new ArgumentException("Receiver Id cannot be empty.", nameof(receiverId));
         
         if (senderId == receiverId)
             throw new ArgumentException("Sender and receiver cannot be the same.");

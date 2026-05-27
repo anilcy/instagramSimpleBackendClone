@@ -19,7 +19,7 @@ public class Post
         IsDeleted = false;
     }
     private Post () { }
-    public int Id { get; private set; }
+    public Guid Id { get; private set; }
     public Guid AuthorId { get; private set; }
     public string MediaUrl { get; private set; } 
     public string? Caption { get; private set; }

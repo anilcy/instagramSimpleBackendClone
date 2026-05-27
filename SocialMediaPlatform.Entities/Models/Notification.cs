@@ -18,7 +18,7 @@ public class Notification
     public Notification(Guid recipientId, NotificationType type, string message)
     {
         if (recipientId == Guid.Empty)
-            throw new ArgumentException("Invalid recipient id.", nameof(recipientId));
+            throw new ArgumentException("Recipient Id cannot be empty.", nameof(recipientId));
         
         if (string.IsNullOrWhiteSpace(message))
             throw new ArgumentException("Message cannot be empty.", nameof(message));
