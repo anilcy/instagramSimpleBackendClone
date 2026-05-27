@@ -16,12 +16,3 @@ public class NotificationDto
     public int? CommentId { get; set; }
 }
 
-public enum NotificationType
-{
-    Like,           // Someone liked your post
-    Comment,        // Someone commented on your post
-    Follow,         // Someone followed you
-    FollowRequest,  // Someone requested to follow you
-    CommentLike,    // Someone liked your comment
-    CommentReply    // Someone replied to your comment
-}

@@ -52,7 +52,7 @@ public class Follow
         DecidedAt = DateTimeOffset.UtcNow;
     }
     
-    public void SoftDelete()
+    public void SoftDeleteFollow()
     {
         if (IsDeleted)
             return;
