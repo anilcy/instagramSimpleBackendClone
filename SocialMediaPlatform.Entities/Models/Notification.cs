@@ -5,7 +5,7 @@ namespace SocialMediaPlatform.Entities.Models;
 
 public enum NotificationType
 {
-    PostLike,           // Someone liked your post
+    PostLike,       // Someone liked your post
     Message,
     Follow,         // Someone followed you
     FollowRequest,  // Someone requested to follow you

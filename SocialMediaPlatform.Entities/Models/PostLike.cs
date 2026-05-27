@@ -1,12 +1,38 @@
+using System;
+
 namespace SocialMediaPlatform.Entities.Models;
 
 public class PostLike
 {
-    public Guid UserId { get; set; }
-    public int PostId { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public bool IsDeleted { get; set; } = false;
+    public PostLike(Guid userId, Guid postId)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("Invalid user id.", nameof(userId));
+
+        if (postId == Guid.Empty)
+            throw new ArgumentException("Invalid post id.", nameof(postId));
+
+        UserId = userId;
+        PostId = postId;
+        CreatedAt = DateTimeOffset.UtcNow;
+        IsDeleted = false;
+    }
+
+    private PostLike() { }
+
+    public Guid UserId { get; private set; }
+    public Guid PostId { get; private set; }
+    public DateTimeOffset CreatedAt { get; private set; }
+    public bool IsDeleted { get; private set; } 
     
-    public AppUser User { get; set; } = null!;
-    public Post Post { get; set; } = null!;
+    //Navigation properties
+    public AppUser User { get; private set; } = null!;
+    public Post Post { get; private set; } = null!;
+    
+    public void SoftDeletePostLike()
+    {
+        if (IsDeleted)
+            return;
+        IsDeleted = true;
+    }
 }
