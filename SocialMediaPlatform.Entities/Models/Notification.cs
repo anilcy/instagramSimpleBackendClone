@@ -32,7 +32,8 @@ public class Notification
     }
     public static Notification PostLikeNotification(Guid recipientId, Guid actorId, Guid postId)
     {
-        var message = $"liked your post.";
+        // client side will put the actor's name 
+        var message = "liked your post.";
         var notification = new Notification(recipientId, NotificationType.PostLike, message);
         notification.ActorId = actorId;
         notification.PostId = postId;
@@ -41,7 +42,7 @@ public class Notification
     
     public static Notification MessageNotification(Guid recipientId, Guid actorId)
     {
-        var message = $"sent you a message.";
+        var message = "sent you a message.";
         var notification = new Notification(recipientId, NotificationType.Message, message);
         notification.ActorId = actorId;
         return notification;
@@ -49,7 +50,7 @@ public class Notification
 
     public static Notification FollowNotification(Guid recipientId, Guid actorId)
     {
-        var message = $"started following you.";
+        var message = "started following you.";
         var notification = new Notification(recipientId, NotificationType.Follow, message);
         notification.ActorId = actorId;
         return notification;
@@ -57,7 +58,7 @@ public class Notification
 
     public static Notification FollowRequestNotification(Guid recipientId, Guid actorId)
     {
-        var message = $"wants to follow you.";
+        var message = "wants to follow you.";
         var notification = new Notification(recipientId, NotificationType.FollowRequest, message);
         notification.ActorId = actorId;
         return notification;
@@ -65,7 +66,7 @@ public class Notification
     
     public static Notification CommentNotification(Guid recipientId, Guid actorId, Guid commentId, Guid postId)
     {
-        var message = $"commented on your post.";
+        var message = "commented on your post.";
         var notification = new Notification(recipientId, NotificationType.Comment, message);
         notification.ActorId = actorId;
         notification.PostId = postId;
@@ -75,7 +76,7 @@ public class Notification
 
     public static Notification CommentLikeNotification(Guid recipientId, Guid commentId, Guid actorId)
     {
-        var message = $"liked your comment.";
+        var message = "liked your comment.";
         var notification = new Notification(recipientId, NotificationType.CommentLike, message);
         notification.ActorId = actorId;
         notification.CommentId = commentId;
@@ -84,7 +85,7 @@ public class Notification
 
     public static Notification CommentReplyNotification(Guid recipientId, Guid actorId, Guid postId, Guid commentId)
     {
-        var message = $"replied to your comment.";
+        var message = "replied to your comment.";
         var notification = new Notification(recipientId, NotificationType.CommentReply, message);
         notification.ActorId = actorId;
         notification.PostId = postId;
