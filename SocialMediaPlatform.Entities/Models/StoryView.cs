@@ -4,13 +4,24 @@ namespace SocialMediaPlatform.Entities.Models;
 
 public class StoryView
 {
-    public int Id { get; set; }
+    public StoryView(Guid storyId, Guid userId)
+    {
+        if (storyId == Guid.Empty)
+            throw new ArgumentException("Story id cannot be empty.", nameof(storyId));
+        if (userId == Guid.Empty)
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
 
-    public int StoryId { get; set; }
-    public Story Story { get; set; } = null!;
+        StoryId = storyId;
+        UserId = userId;
+        ViewedAt = DateTimeOffset.UtcNow;
+    }
+    private StoryView() { }
 
-    public Guid UserId { get; set; }
-    public AppUser User { get; set; } = null!;
+    public Guid StoryId { get; private set; }
+    public Guid UserId { get; private set; }
+    public DateTimeOffset ViewedAt { get; private set; }     
+    public Story Story { get; private set; } = null!;
+    public AppUser User { get; private set; } = null!;
 
-    public DateTime ViewedAt { get; set; } = DateTime.UtcNow;
+
 }
