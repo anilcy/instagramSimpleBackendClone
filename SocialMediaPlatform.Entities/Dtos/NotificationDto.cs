@@ -1,3 +1,6 @@
+using System;
+using SocialMediaPlatform.Entities.Models;
+
 namespace SocialMediaPlatform.Entities.Dtos;
 
 public class NotificationDto

@@ -32,6 +32,7 @@ public class Post
     
     public ICollection<Comment> Comments { get; private set; } = new List<Comment>();
     public ICollection<PostLike> Likes { get; private set; } = new List<PostLike>();
+    public ICollection<Notification> Notifications { get; private set; } = new List<Notification>();
     
     public void UpdatePost(string? newCaption, string? newMediaUrl)
     {

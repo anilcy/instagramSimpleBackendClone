@@ -49,6 +49,8 @@ public class AppUser : IdentityUser<Guid>
     public ICollection<Story> Stories { get; private set; } = new List<Story>();
     public ICollection<StoryView>  StoryViews  { get; private set; } = new List<StoryView>();
     
+    public ICollection<StoryLike> StoryLikes  { get; private set; } = new List<StoryLike>();
+    
     
     public void UpdateProfile(string? fullName, string? profilePictureUrl, string? bio, string? websiteUrl)
     {
