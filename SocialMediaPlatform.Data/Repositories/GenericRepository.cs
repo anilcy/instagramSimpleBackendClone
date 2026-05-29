@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using SocialMediaPlatform.Data.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,60 +11,40 @@ namespace SocialMediaPlatform.Data.Repositories;
 public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
     protected readonly SocialMediaDbContext _context;
-    private readonly DbSet<T> _dbSet;
+    protected readonly DbSet<T> _dbSet;
 
     public GenericRepository(SocialMediaDbContext context)
     {
         _context = context;
         _dbSet = context.Set<T>();
     }
-    
-    public async Task<IEnumerable<T>> GetAllAsync()
-    {
-        return await _dbSet.ToListAsync();
-    }
 
     public async Task<T?> GetByIdAsync(object id)
-    {
-        return await _dbSet.FindAsync(id);
-    }
+        => await _dbSet.FindAsync(id);
+
+    public async Task<IEnumerable<T>> GetAllAsync()
+        => await _dbSet.ToListAsync();
 
     public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
-    {
-        return await _dbSet.Where(predicate).ToListAsync();
-    }
+        => await _dbSet.Where(predicate).ToListAsync();
 
-    public async Task InsertAsync(T entity)
-    {
-        await _dbSet.AddAsync(entity);
-    }
+    public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate)
+        => await _dbSet.AnyAsync(predicate);
 
-    public Task UpdateAsync(T entity)
-    {
-        _dbSet.Update(entity);
-        return Task.CompletedTask;
-    }
+    public async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null)
+        => predicate == null
+            ? await _dbSet.CountAsync()
+            : await _dbSet.CountAsync(predicate);
 
-    public Task DeleteAsync(T entity)
-    {
-        _dbSet.Remove(entity);
-        return Task.CompletedTask;
-    }
+    public IQueryable<T> Query()
+        => _dbSet.AsQueryable();
 
-    public async Task DeleteAsync(Expression<Func<T, bool>> predicate)
-    {
-        var entities = _dbSet.Where(predicate);
-        _dbSet.RemoveRange(entities);
-        await Task.CompletedTask;
-    }
+    public void Add(T entity)
+        => _dbSet.Add(entity);
 
-    public async Task<int> CountAsync()
-    {
-        return await _dbSet.CountAsync();
-    }
+    public void Remove(T entity)
+        => _dbSet.Remove(entity);
 
     public async Task<int> SaveChangesAsync()
-    {
-        return await _context.SaveChangesAsync();
-    }
+        => await _context.SaveChangesAsync();
 }
