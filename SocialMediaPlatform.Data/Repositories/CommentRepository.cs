@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,13 +14,14 @@ public class CommentRepository : GenericRepository<Comment>, ICommentRepository
     {
     }
 
-    public async Task<List<Comment>> GetCommentsByPostIdAsync(int postId)
+    public async Task<List<Comment>> GetCommentsByPostIdAsync(Guid postId)
     {
+        // Just a simple logic which orders comments by date.
         return await _context.Comments
             .Where(c => c.PostId == postId && c.ParentCommentId == null)
             .Include(c => c.Author)
-            .Include(c => c.Replies)                // alt yorumları al
-                .ThenInclude(r => r.Author)         // alt yorum yazarlarını da al
+            .Include(c => c.Replies)               
+                .ThenInclude(r => r.Author)         
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
     }

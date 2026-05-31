@@ -4,7 +4,9 @@ namespace SocialMediaPlatform.Entities.Models;
 
 public class Message
 {
-    public Message (Guid senderId, Guid receiverId, string content)
+    //Content can be null in case a media is sent without a message and there should be a check if at least one of
+    //them is provided, the check will be in the service since they will be set at different times separately.
+    public Message (Guid senderId, Guid receiverId, string? content)
     {
         if (senderId == Guid.Empty)
             throw new ArgumentException("Sender Id cannot be empty.", nameof(senderId));
@@ -14,9 +16,6 @@ public class Message
         
         if (senderId == receiverId)
             throw new ArgumentException("Sender and receiver cannot be the same.");
-        
-        if (string.IsNullOrWhiteSpace(content))
-            throw new ArgumentException("Content cannot be empty.", nameof(content));
         
         SenderId = senderId;
         ReceiverId = receiverId;
@@ -30,7 +29,7 @@ public class Message
     public Guid Id { get; private set; }
     public Guid SenderId { get; private set; }
     public Guid ReceiverId { get; private set; }
-    public string Content { get; private set; } 
+    public string? Content { get; private set; } 
     public DateTimeOffset CreatedAt { get; private set; } 
     public DateTimeOffset? ReadAt { get; private set; } 
     public DateTimeOffset? UpdatedAt { get; private set; }
@@ -44,6 +43,7 @@ public class Message
     //Navigation properties 
     public AppUser Receiver { get; private set; } = null!;
     public AppUser Sender { get; private set; } = null!;
+    public ICollection<Media> MediaItems { get; private set; } = new List<Media>();
     
     public void MarkAsRead()
     {

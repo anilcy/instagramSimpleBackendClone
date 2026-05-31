@@ -18,6 +18,7 @@ public class SocialMediaDbContext : IdentityDbContext<AppUser, AppRole, Guid>
     public DbSet<Story> Stories => Set<Story>();
     public DbSet<StoryLike> StoryLikes => Set<StoryLike>();
     public DbSet<StoryView> StoryViews => Set<StoryView>();   
+    public DbSet<Media> MediaItems => Set<Media>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -47,7 +48,11 @@ public class SocialMediaDbContext : IdentityDbContext<AppUser, AppRole, Guid>
                 .HasQueryFilter(sl => !sl.IsDeleted && sl.User.IsActive && !sl.User.IsDeleted && sl.Story.ExpiresAt > DateTimeOffset.UtcNow);
             modelBuilder.Entity<StoryView>()
                 .HasQueryFilter(sv => sv.Story.ExpiresAt > DateTimeOffset.UtcNow && sv.User.IsActive && !sv.User.IsDeleted);
-
+            modelBuilder.Entity<Media>()
+                .HasQueryFilter(m => !m.IsDeleted && 
+                                     ((m.Post != null && m.Post.Author.IsActive && !m.Post.Author.IsDeleted) ||
+                                      (m.Message != null && m.Message.Sender.IsActive && !m.Message.Sender.IsDeleted)));
+                
             // Relationships and delete behaviors
 
             modelBuilder.Entity<Story>()
@@ -125,7 +130,7 @@ public class SocialMediaDbContext : IdentityDbContext<AppUser, AppRole, Guid>
                 .HasOne(pl => pl.User)
                 .WithMany(u => u.Likes)
                 .HasForeignKey(pl => pl.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             
             modelBuilder.Entity<CommentLike>()
@@ -134,7 +139,7 @@ public class SocialMediaDbContext : IdentityDbContext<AppUser, AppRole, Guid>
                 .HasOne(cl => cl.User)
                 .WithMany(u => u.CommentLikes)
                 .HasForeignKey(cl => cl.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             
             modelBuilder.Entity<Follow>()
@@ -167,7 +172,7 @@ public class SocialMediaDbContext : IdentityDbContext<AppUser, AppRole, Guid>
                 .HasOne(n => n.Recipient)
                 .WithMany(u => u.Notifications)
                 .HasForeignKey(n => n.RecipientId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Notification>()
                 .HasOne(n => n.Actor)
                 // WE Don't USE NAVIGATION PROPERTY SINCE BOTH ACTOR AND RECIPIENT BELONG TO APPUSER, IT WILL
@@ -184,8 +189,26 @@ public class SocialMediaDbContext : IdentityDbContext<AppUser, AppRole, Guid>
                 .OnDelete(DeleteBehavior.SetNull); 
             modelBuilder.Entity<Notification>()
                 .HasOne(n => n.Comment)
-                .WithMany() // no notifications here because we won't use post.Notifications
+                .WithMany() // no notifications here because we won't use comment.Notifications
                 .HasForeignKey(n => n.CommentId)
                 .OnDelete(DeleteBehavior.SetNull);
+            
+            
+            modelBuilder.Entity<Media>()
+                .HasOne(m => m.User)
+                .WithMany()
+                .HasForeignKey(m => m.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Media>()
+                .HasOne(m => m.Message)
+                .WithMany(m => m.MediaItems)
+                .HasForeignKey(n => n.MessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Media>()
+                .HasOne(p => p.Post)
+                .WithMany(p => p.MediaItems)
+                .HasForeignKey(m => m.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
         }
 }

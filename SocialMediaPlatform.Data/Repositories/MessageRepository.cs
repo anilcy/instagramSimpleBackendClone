@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using SocialMediaPlatform.Data.Interfaces;
 using SocialMediaPlatform.Entities.Models;
@@ -6,12 +10,9 @@ namespace SocialMediaPlatform.Data.Repositories;
 
 public class MessageRepository : GenericRepository<Message>, IMessageRepository
 {
-    // DbContext'i base sınıfa da geçiyoruz
-    private readonly SocialMediaDbContext _db;
-
+    
     public MessageRepository(SocialMediaDbContext context) : base(context)
     {
-        _db = context;
     }
 
     // İki kullanıcı arasındaki tüm mesajlar (kronolojik, sayfalı)
@@ -20,7 +21,7 @@ public class MessageRepository : GenericRepository<Message>, IMessageRepository
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 50;
 
-        return await _db.Messages
+        return await _context.Messages
             .Where(m => !m.IsDeleted &&
                         ((m.SenderId == userId && m.ReceiverId == otherUserId) ||
                          (m.SenderId == otherUserId && m.ReceiverId == userId)))
@@ -36,7 +37,7 @@ public class MessageRepository : GenericRepository<Message>, IMessageRepository
     // Not: Basit çözüm — performansı artırmak için projection/Grouping yaptık.
     public async Task<List<Message>> GetConversationsAsync(Guid userId)
     {
-        var query = _db.Messages
+        var query = _context.Messages
             .Where(m => !m.IsDeleted &&
                         (m.SenderId == userId || m.ReceiverId == userId));
 
@@ -62,7 +63,7 @@ public class MessageRepository : GenericRepository<Message>, IMessageRepository
     // Belirli bir karşı taraftan gelen okunmamış mesaj sayısı
     public Task<int> GetUnreadMessagesCountAsync(Guid userId, Guid fromUserId)
     {
-        return _db.Messages.CountAsync(m =>
+        return _context.Messages.CountAsync(m =>
             !m.IsDeleted &&
             m.ReceiverId == userId &&
             m.SenderId == fromUserId &&
@@ -75,7 +76,7 @@ public class MessageRepository : GenericRepository<Message>, IMessageRepository
         // EF Core 9: set-based update ile hızlı işaretleme
         try
         {
-            await _db.Messages
+            await _context.Messages
                 .Where(m => !m.IsDeleted &&
                             m.ReceiverId == userId &&
                             m.SenderId == fromUserId &&
@@ -87,7 +88,7 @@ public class MessageRepository : GenericRepository<Message>, IMessageRepository
         catch (NotSupportedException)
         {
             // Sağlayıcı ExecuteUpdateAsync desteklemiyorsa fallback
-            var list = await _db.Messages
+            var list = await _context.Messages
                 .Where(m => !m.IsDeleted &&
                             m.ReceiverId == userId &&
                             m.SenderId == fromUserId &&
@@ -100,14 +101,14 @@ public class MessageRepository : GenericRepository<Message>, IMessageRepository
                 m.ReadAt = DateTime.UtcNow;
             }
 
-            await _db.SaveChangesAsync();
+            await _context.SaveChangesAsync();
         }
     }
 
     // İki kullanıcı arasındaki son mesaj
     public Task<Message?> GetLastMessageBetweenUsersAsync(Guid userId, Guid otherUserId)
     {
-        return _db.Messages
+        return _context.Messages
             .Where(m => !m.IsDeleted &&
                         ((m.SenderId == userId && m.ReceiverId == otherUserId) ||
                          (m.SenderId == otherUserId && m.ReceiverId == userId)))

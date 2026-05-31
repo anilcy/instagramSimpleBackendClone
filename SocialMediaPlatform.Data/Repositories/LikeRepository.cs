@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using SocialMediaPlatform.Data.Interfaces;
 using SocialMediaPlatform.Entities.Models;
 using Microsoft.EntityFrameworkCore;
@@ -10,19 +14,19 @@ public class LikeRepository : GenericRepository<PostLike>, ILikeRepository
     {
     }
 
-    public async Task<PostLike?> GetLikeAsync(int postId, Guid userId)
+    public async Task<PostLike?> GetLikeAsync(Guid postId, Guid userId)
     {
         return await _context.Likes
-            .FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
+            .SingleOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
     }
 
-    public async Task<int> GetLikesCountAsync(int postId)
+    public async Task<int> GetLikesCountAsync(Guid postId)
     {
         return await _context.Likes
             .CountAsync(l => l.PostId == postId);
     }
 
-    public async Task<List<PostLike>> GetPostLikesAsync(int postId, int page = 1, int pageSize = 20)
+    public async Task<List<PostLike>> GetPostLikesAsync(Guid postId, int page = 1, int pageSize = 20)
     {
         return await _context.Likes
             .Where(l => l.PostId == postId)
@@ -33,7 +37,7 @@ public class LikeRepository : GenericRepository<PostLike>, ILikeRepository
             .ToListAsync();
     }
 
-    public async Task<bool> IsPostLikedByUserAsync(int postId, Guid userId)
+    public async Task<bool> IsPostLikedByUserAsync(Guid postId, Guid userId)
     {
         return await _context.Likes
             .AnyAsync(l => l.PostId == postId && l.UserId == userId);

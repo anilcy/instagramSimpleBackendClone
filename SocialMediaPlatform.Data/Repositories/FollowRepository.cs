@@ -44,12 +44,14 @@ public class FollowRepository : GenericRepository<Follow>, IFollowRepository
             .ToListAsync();
     }
 
-    public async Task<List<Follow>> GetPendingFollowRequestsAsync(Guid userId)
+    public async Task<List<Follow>> GetPendingFollowRequestsAsync(Guid userId, int page, int pageSize)
     {
         return await _context.Follows
             .Where(f => f.FollowedId == userId && f.Status == FollowStatus.Pending)
             .Include(f => f.Follower)
             .OrderByDescending(f => f.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
     }
 
