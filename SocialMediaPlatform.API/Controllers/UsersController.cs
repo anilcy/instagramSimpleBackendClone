@@ -43,10 +43,10 @@ public class UsersController : BaseController
     }
 
     [HttpPut("me")]
-    public async Task<ActionResult<UserDto>> UpdateMyProfile([FromBody] UpdateUserProfileDto updateDto)
+    public async Task<ActionResult<UserDto>> UpdateMyProfile([FromBody] UserProfileUpdateDto userProfileUpdateDto)
     {
         var currentUserId = CurrentUserId;
-        var user = await _userService.UpdateUserProfileAsync(currentUserId, updateDto);
+        var user = await _userService.UpdateUserProfileAsync(currentUserId, userProfileUpdateDto);
         return Ok(user);
     }
 

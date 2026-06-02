@@ -1,4 +1,4 @@
-namespace SocialMediaPlatform.Entities.Dtos;
+namespace SocialMediaPlatform.Entities.Dtos.AuthDtos;
 
 public class LoginRequest
 {

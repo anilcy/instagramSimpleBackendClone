@@ -1,18 +1,18 @@
 using SocialMediaPlatform.Entities.Models;
 
-namespace SocialMediaPlatform.Entities.Dtos;
+namespace SocialMediaPlatform.Entities.Dtos.UserDtos;
 
 public class UserDto
 {
     public Guid Id { get; set; }
     public string UserName { get; set; } = null!;
     public string Email { get; set; } = null!;
-    public string FullName { get; set; } = null!;
+    public string? FullName { get; set; } 
     public string? ProfilePictureUrl { get; set; }
     public string? Bio { get; set; }
     public string? WebsiteUrl { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime LastLoginDate { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset LastLoginDate { get; set; }
     public bool IsActive { get; set; }
     public bool IsPrivate { get; set; }
     
@@ -26,10 +26,3 @@ public class UserDto
     public FollowStatus? FollowStatus { get; set; }
 }
 
-public class UpdateUserProfileDto
-{
-    public string FullName { get; set; } = null!;
-    public string? Bio { get; set; }
-    public string? WebsiteUrl { get; set; }
-    public bool IsPrivate { get; set; }
-}

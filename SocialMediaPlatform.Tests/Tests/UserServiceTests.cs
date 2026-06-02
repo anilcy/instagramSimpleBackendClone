@@ -109,7 +109,7 @@ public class UserServiceTests
             WebsiteUrl = "https://old.example",
             IsPrivate = false
         };
-        var dto = new UpdateUserProfileDto
+        var dto = new UserProfileUpdateDto
         {
             FullName = "New Name",
             Bio = "new bio",

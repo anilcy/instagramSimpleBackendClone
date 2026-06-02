@@ -56,16 +56,16 @@ public class UserService : IUserService
         return await GetUserProfileAsync(user.Id, currentUserId);
     }
 
-    public async Task<UserDto> UpdateUserProfileAsync(Guid userId, UpdateUserProfileDto updateDto)
+    public async Task<UserDto> UpdateUserProfileAsync(Guid userId, UserProfileUpdateDto userProfileUpdateDto)
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
             throw new ArgumentException("User not found");
 
-        user.FullName = updateDto.FullName;
-        user.Bio = updateDto.Bio;
-        user.WebsiteUrl = updateDto.WebsiteUrl;
-        user.IsPrivate = updateDto.IsPrivate;
+        user.FullName = userProfileUpdateDto.FullName;
+        user.Bio = userProfileUpdateDto.Bio;
+        user.WebsiteUrl = userProfileUpdateDto.WebsiteUrl;
+        user.IsPrivate = userProfileUpdateDto.IsPrivate;
         user.UpdatedAt = DateTime.UtcNow;
 
         await _userRepository.UpdateAsync(user);
