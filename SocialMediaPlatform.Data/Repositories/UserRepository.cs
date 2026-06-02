@@ -29,8 +29,8 @@ public class UserRepository : GenericRepository<AppUser>, IUserRepository
     public async Task<List<AppUser>> SearchUsersAsync(string searchTerm, int page, int pageSize)
     {
         return await _context.Users
-            .Where(u => (u.UserName != null && u.UserName.Contains(searchTerm)) || 
-                       (u.FullName != null && u.FullName.Contains(searchTerm)))
+            .Where(u =>  (u.UserName != null && u.UserName.Contains(searchTerm)) || 
+                                 (u.FullName != null && u.FullName.Contains(searchTerm)))
             .OrderBy(u => u.UserName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -42,14 +42,5 @@ public class UserRepository : GenericRepository<AppUser>, IUserRepository
         return await _context.Posts
             .CountAsync(p => p.AuthorId == userId);
     }
-
-    public async Task UpdateLastLoginAsync(Guid userId)
-    {
-        var user = await _context.Users.FindAsync(userId);
-        if (user != null)
-        {
-            user.LastLoginDate = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-        }
-    }
+    
 }

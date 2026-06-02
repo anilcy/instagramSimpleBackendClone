@@ -7,18 +7,13 @@ namespace SocialMediaPlatform.Data.Interfaces;
 
 public interface IMessageRepository : IGenericRepository<Message>
 {
-    // İki kullanıcı arası konuşma (sayfalı)
+    // all messages between two users
     Task<List<Message>> GetConversationAsync(Guid userId, Guid otherUserId, int page, int pageSize);
 
-    // Kullanıcının tüm karşı taraflarla son mesaj özetleri (listelemek için)
-    Task<List<Message>> GetConversationsAsync(Guid userId);
+    //all last messages between a user and all others that the user talked to
+    Task<List<Message>> GetConversationsAsync(Guid userId, int page, int pageSize);
 
-    // Belirli bir karşı taraftan gelen okunmamış mesaj sayısı
+    // number of unread messages from a specific user
     Task<int> GetUnreadMessagesCountAsync(Guid userId, Guid fromUserId);
-
-    // Belirli bir konuşmayı okunmuş işaretle
-    Task MarkMessagesAsReadAsync(Guid userId, Guid fromUserId);
-
-    // İki kullanıcı arasındaki son mesajı getir
-    Task<Message?> GetLastMessageBetweenUsersAsync(Guid userId, Guid otherUserId);
+    
 }

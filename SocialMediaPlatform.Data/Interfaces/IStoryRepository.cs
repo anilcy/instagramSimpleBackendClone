@@ -7,7 +7,7 @@ namespace SocialMediaPlatform.Data.Interfaces;
 
 public interface IStoryRepository : IGenericRepository<Story>
 {
-    Task<Story?> GetStoryAsync(int storyId);
+    Task<Story?> GetStoryAsync(Guid storyId);
 
     /// <summary>Yalnızca henüz süresi dolmamış (ExpiresAt > now) hikâyeler</summary>
     Task<List<Story>> GetUserActiveStoriesAsync(Guid userId,
@@ -19,13 +19,13 @@ public interface IStoryRepository : IGenericRepository<Story>
         int page = 1,
         int pageSize = 20);
 
-    Task<int>  GetStoryViewCountAsync(int storyId);
-    Task<bool> HasUserViewedStoryAsync(int storyId, Guid userId);
+    Task<int>  GetStoryViewCountAsync(Guid storyId);
+    Task<bool> HasUserViewedStoryAsync(Guid storyId, Guid userId);
 
     /// <summary>Yeni görüntüleme kaydı ekler ( SaveChangesAsync base’te )</summary>
     Task AddStoryViewAsync(StoryView view);
 
-    Task<List<StoryView>> GetStoryViewsAsync(int storyId,
+    Task<List<StoryView>> GetStoryViewsAsync(Guid storyId,
         int page = 1,
         int pageSize = 50);
 }

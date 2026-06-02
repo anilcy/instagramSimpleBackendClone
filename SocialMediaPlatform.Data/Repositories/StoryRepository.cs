@@ -12,7 +12,7 @@ public class StoryRepository : GenericRepository<Story>, IStoryRepository
 {
     public StoryRepository(SocialMediaDbContext context) : base(context) { }
 
-    public async Task<Story?> GetStoryAsync(int storyId)
+    public async Task<Story?> GetStoryAsync(Guid storyId)
     {
         return await _context.Stories
             .Include(s => s.User)
@@ -26,7 +26,7 @@ public class StoryRepository : GenericRepository<Story>, IStoryRepository
     {
         var now = DateTime.UtcNow;
         return await _context.Stories
-            .Where(s => s.UserId == userId && s.ExpiresAt > now)
+            .Where(s => s.UserId == userId)
             .Include(s => s.User)
             .OrderByDescending(s => s.CreatedAt)
             .Skip((page - 1) * pageSize)
@@ -38,7 +38,7 @@ public class StoryRepository : GenericRepository<Story>, IStoryRepository
         int page = 1,
         int pageSize = 20)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         // IQueryable, henüz SQL’e çevrilmedi (deferred execution)
         var followingIds = _context.Follows
@@ -56,13 +56,13 @@ public class StoryRepository : GenericRepository<Story>, IStoryRepository
     }
 
 
-    public async Task<int> GetStoryViewCountAsync(int storyId)
+    public async Task<int> GetStoryViewCountAsync(Guid storyId)
     {
         return await _context.StoryViews
             .CountAsync(v => v.StoryId == storyId);
     }
 
-    public async Task<bool> HasUserViewedStoryAsync(int storyId, Guid userId)
+    public async Task<bool> HasUserViewedStoryAsync(Guid storyId, Guid userId)
     {
         return await _context.StoryViews
             .AnyAsync(v => v.StoryId == storyId && v.UserId == userId);
@@ -73,7 +73,7 @@ public class StoryRepository : GenericRepository<Story>, IStoryRepository
         await _context.StoryViews.AddAsync(view);
     }
 
-    public async Task<List<StoryView>> GetStoryViewsAsync(int storyId,
+    public async Task<List<StoryView>> GetStoryViewsAsync(Guid storyId,
                                                           int page = 1,
                                                           int pageSize = 50)
     {
