@@ -1,7 +1,14 @@
 using AutoMapper;
 using SocialMediaPlatform.Entities.Models;
 using SocialMediaPlatform.Entities.Dtos;
+using SocialMediaPlatform.Entities.Dtos.CommentDtos;
+using SocialMediaPlatform.Entities.Dtos.FollowDtos;
+using SocialMediaPlatform.Entities.Dtos.MediaDtos;
+using SocialMediaPlatform.Entities.Dtos.MessageDtos;
+using SocialMediaPlatform.Entities.Dtos.NotificationDtos;
+using SocialMediaPlatform.Entities.Dtos.PostDtos;
 using SocialMediaPlatform.Entities.Dtos.Story;
+using SocialMediaPlatform.Entities.Dtos.UserDtos;
 
 namespace SocialMediaPlatform.Business.Mappings;
 
@@ -9,59 +16,46 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        // Post entity'sini PostDto'ya dönüştürme kuralı
-        CreateMap<Post, PostDto>()
-            .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.Author));
-
-        // Eğer PostCreateDto veya PostUpdateDto dönüşümleri gerekiyorsa ekleyebilirsiniz:
-        CreateMap<PostCreateDto, Post>();
-        CreateMap<PostUpdateDto, Post>();
-
-        // Comment mappings
-        // Entity → DTO
-        CreateMap<Comment, CommentDto>()
-            // Temel alanlar (Id, PostId, Content, CreatedAt) AutoMapper otomatik halleder
-            .ForMember(d => d.Author,
-                opt => opt.MapFrom(s => s.Author))               // yazar bilgisini al
-            .ForMember(d => d.ParentCommentId,
-                opt => opt.MapFrom(s => s.ParentCommentId))     // reply-to id
-            .ForMember(d => d.Replies,
-                opt => opt.MapFrom(s => s.Replies))             // alt yorumlar
-            .ForMember(d => d.RepliesCount,
-                opt => opt.MapFrom(s => s.Replies.Count));     // alt yorum sayısı
-
-        // DTO → Entity (yeni yorum eklerken)
-        CreateMap<CreateCommentDto, Comment>()
-            .ForMember(d => d.PostId,
-                opt => opt.MapFrom(s => s.PostId))
-            .ForMember(d => d.Content,
-                opt => opt.MapFrom(s => s.Content))
-            .ForMember(d => d.ParentCommentId,
-                opt => opt.MapFrom(s => s.ParentCommentId));
-
-
-        // Story mappings
-        CreateMap<Story, StoryDto>()
-            .ForMember(d => d.UserName,  o => o.MapFrom(s => s.User.UserName))
-            .ForMember(d => d.ProfilePictureUrl, o => o.MapFrom(s => s.User.ProfilePictureUrl));
-
-        CreateMap<StoryCreateDto, Story>();
-
-
-        // User mappings
+        // User
         CreateMap<AppUser, UserDto>();
         CreateMap<AppUser, UserSummaryDto>();
-        
-        // Message mappings
-        CreateMap<Message, MessageDto>()
-            .ForMember(dest => dest.Sender, opt => opt.MapFrom(src => src.Sender))
-            .ForMember(dest => dest.Receiver, opt => opt.MapFrom(src => src.Receiver));
-        
-        CreateMap<CreateMessageDto, Message>();
-        
-        // Follow mappings
-        CreateMap<Follow, FollowDto>()
-            .ForMember(dest => dest.Follower, opt => opt.MapFrom(src => src.Follower))
-            .ForMember(dest => dest.Followed, opt => opt.MapFrom(src => src.Followed));
+
+        // Post
+        CreateMap<Post, PostDto>()
+            .ForMember(d => d.LikesCount, o => o.MapFrom(s => s.Likes.Count))
+            .ForMember(d => d.CommentsCount, o => o.MapFrom(s => s.Comments.Count));
+
+        // Comment
+        CreateMap<Comment, CommentDto>()
+            .ForMember(d => d.LikesCount, o => o.MapFrom(s => s.Likes.Count))
+            .ForMember(d => d.RepliesCount, o => o.MapFrom(s => s.Replies.Count));
+
+        // Story
+        CreateMap<Story, StoryDto>()
+            .ForMember(d => d.UserName, o => o.MapFrom(s => s.User.UserName))
+            .ForMember(d => d.ProfilePictureUrl, o => o.MapFrom(s => s.User.ProfilePictureUrl))
+            .ForMember(d => d.ViewsCount, o => o.MapFrom(s => s.Views.Count))
+            .ForMember(d => d.LikesCount, o => o.MapFrom(s => s.Likes.Count));
+
+        CreateMap<StoryView, StoryViewDto>()
+            .ForMember(d => d.UserName, o => o.MapFrom(s => s.User.UserName))
+            .ForMember(d => d.ProfilePictureUrl, o => o.MapFrom(s => s.User.ProfilePictureUrl));
+
+        // Media
+        CreateMap<Media, MediaDto>();
+
+        // Message
+        CreateMap<Message, MessageDto>();
+
+        // Follow
+        CreateMap<Follow, FollowDto>();
+
+        // Likes
+        CreateMap<PostLike, PostLikeDto>();
+        CreateMap<CommentLike, CommentLikeDto>();
+        CreateMap<StoryLike, StoryLikeDto>();
+
+        // Notification
+        CreateMap<Notification, NotificationDto>();
     }
 }
