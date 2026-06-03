@@ -4,6 +4,7 @@ using SocialMediaPlatform.Business.Interfaces;
 using SocialMediaPlatform.Entities.Dtos;
 using SocialMediaPlatform.Entities.Models;
 using System.Threading.Tasks;
+using SocialMediaPlatform.Entities.Dtos.AuthDtos;
 
 namespace SocialMediaPlatform.Business.Services
 {

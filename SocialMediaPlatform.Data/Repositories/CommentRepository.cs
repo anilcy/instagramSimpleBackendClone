@@ -14,7 +14,7 @@ public class CommentRepository : GenericRepository<Comment>, ICommentRepository
     {
     }
 
-    public async Task<List<Comment>> GetCommentsByPostIdAsync(Guid postId)
+    public async Task<List<Comment>> GetCommentsByPostIdAsync(Guid postId, int page, int pageSize)
     {
         // Just a simple logic which orders comments by date.
         return await _context.Comments
@@ -23,6 +23,8 @@ public class CommentRepository : GenericRepository<Comment>, ICommentRepository
             .Include(c => c.Replies)               
                 .ThenInclude(r => r.Author)         
             .OrderByDescending(c => c.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
     }
 
