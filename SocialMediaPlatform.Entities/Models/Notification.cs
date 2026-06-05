@@ -9,6 +9,7 @@ public enum NotificationType
     Message,
     Follow,         // Someone followed you
     FollowRequest,  // Someone requested to follow you
+    FollowAccepted,  // Someone accepted your follow request
     Comment,        // Someone commented on your post
     CommentLike,    // Someone liked your comment
     CommentReply    // Someone replied to your comment
@@ -60,6 +61,14 @@ public class Notification
     {
         var message = "wants to follow you.";
         var notification = new Notification(recipientId, NotificationType.FollowRequest, message);
+        notification.ActorId = actorId;
+        return notification;
+    }
+
+    public static Notification FollowAcceptedNotification(Guid recipientId, Guid actorId)
+    {
+        var message = "accepted your follow request.";
+        var notification = new Notification(recipientId, NotificationType.FollowAccepted, message);
         notification.ActorId = actorId;
         return notification;
     }

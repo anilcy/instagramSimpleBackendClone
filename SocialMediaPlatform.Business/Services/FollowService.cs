@@ -1,7 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using AutoMapper;
 using SocialMediaPlatform.Business.Interfaces;
+using SocialMediaPlatform.Data;
 using SocialMediaPlatform.Data.Interfaces;
-using SocialMediaPlatform.Entities.Dtos;
+using SocialMediaPlatform.Entities.Dtos.FollowDtos;
 using SocialMediaPlatform.Entities.Models;
 
 namespace SocialMediaPlatform.Business.Services;
@@ -9,17 +13,24 @@ namespace SocialMediaPlatform.Business.Services;
 public class FollowService : IFollowService
 {
     private readonly IFollowRepository _followRepository;
-    private readonly INotificationService _notificationService;
+    private readonly INotificationRepository _notificationRepository;
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
+    private readonly SocialMediaDbContext _dbContext;
 
-    public FollowService(IFollowRepository followRepository, INotificationService notificationService,
-        IUserRepository userRepository, IMapper mapper)
+    public FollowService(
+        IFollowRepository followRepository, 
+        INotificationRepository notificationRepository,
+        IUserRepository userRepository, 
+        IMapper mapper, 
+        SocialMediaDbContext dbContext)
     {
         _followRepository = followRepository;
-        _notificationService = notificationService;
+        _notificationRepository = notificationRepository;
         _userRepository = userRepository;
         _mapper = mapper;
+        _dbContext = dbContext;
+        
     }
 
     public async Task<FollowDto> FollowUserAsync(Guid currentUserId, Guid targetUserId)
@@ -34,25 +45,27 @@ public class FollowService : IFollowService
         var targetUser = await _userRepository.GetByIdAsync(targetUserId);
         if (targetUser == null)
             throw new ArgumentException("Target user not found");
-        
-        var follow = new Follow
-        {
-            FollowerId = currentUserId,
-            FollowedId = targetUserId,
-            Status = targetUser.IsPrivate ? FollowStatus.Pending : FollowStatus.Accepted,
-            CreatedAt = DateTime.UtcNow
-        };
 
-        await _followRepository.InsertAsync(follow);
-        await _followRepository.SaveChangesAsync();
-        
 
+        Follow follow;
         if (!targetUser.IsPrivate)
         {
+            follow = new Follow(currentUserId, targetUserId, false);
+            _followRepository.Add(follow);
             // Create notification immediately for public accounts
-            await _notificationService.CreateFollowNotificationAsync(currentUserId, targetUserId);
+            var notification = Notification.FollowNotification(targetUserId, currentUserId);
+            _notificationRepository.Add(notification);
         }
-
+        else
+        {
+            follow = new Follow(currentUserId, targetUserId, true);
+            _followRepository.Add(follow);
+            // Create follow request notification for private accounts
+            var notification = Notification.FollowRequestNotification(targetUserId, currentUserId);
+            _notificationRepository.Add(notification);
+        }
+        
+        await _dbContext.SaveChangesAsync();
         return _mapper.Map<FollowDto>(follow);
     }
 
@@ -62,9 +75,9 @@ public class FollowService : IFollowService
         if (follow == null)
             return false;
 
-        await _followRepository.DeleteAsync(follow);
-        await _followRepository.SaveChangesAsync();
-        return true;
+        follow.SoftDeleteFollow();
+        await _dbContext.SaveChangesAsync();
+        return true; 
     }
 
     public async Task<FollowResponseDto> RespondToFollowRequestAsync(Guid currentUserId, Guid requesterId, FollowStatus status)
@@ -73,28 +86,24 @@ public class FollowService : IFollowService
         if (follow == null || follow.Status != FollowStatus.Pending)
             throw new ArgumentException("Follow request not found");
 
-        follow.Status = status;
-        follow.DecidedAt = DateTime.UtcNow;
-        await _followRepository.UpdateAsync(follow);
-        await _followRepository.SaveChangesAsync();
-
         if (status == FollowStatus.Accepted)
         {
-            await _notificationService.CreateFollowNotificationAsync(follow.FollowerId, follow.FollowedId);
+            follow.AcceptRequest();
+            var notification = Notification.FollowAcceptedNotification(requesterId, currentUserId);
+            _notificationRepository.Add(notification);
         }
-
-        return new FollowResponseDto
+        else if (status == FollowStatus.Rejected)
         {
-            Success = true,
-            Message = status == FollowStatus.Accepted ? "Follow request accepted" : "Follow request rejected",
-            Status = status,
-            Follow = _mapper.Map<FollowDto>(follow)
-        };
+            follow.RejectRequest();
+        }
+        
+        await _dbContext.SaveChangesAsync();
+        return _mapper.Map<FollowResponseDto>(follow);
     }
 
-    public async Task<List<FollowRequestDto>> GetFollowRequestsAsync(Guid userId)
+    public async Task<List<FollowRequestDto>> GetFollowRequestsAsync(Guid userId, int page = 1, int pageSize = 20)
     {
-        var followRequests = await _followRepository.GetPendingFollowRequestsAsync(userId);
+        var followRequests = await _followRepository.GetPendingFollowRequestsAsync(userId, page, pageSize);
         return _mapper.Map<List<FollowRequestDto>>(followRequests);
     }
 
