@@ -1,7 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using AutoMapper;
 using SocialMediaPlatform.Business.Interfaces;
+using SocialMediaPlatform.Data;
 using SocialMediaPlatform.Data.Interfaces;
-using SocialMediaPlatform.Entities.Dtos;
+using SocialMediaPlatform.Entities.Dtos.NotificationDtos;
 
 namespace SocialMediaPlatform.Business.Services;
 
@@ -9,11 +13,16 @@ public class NotificationService : INotificationService
 {
     private readonly INotificationRepository _notificationRepository;
     private readonly IMapper _mapper;
+    private readonly SocialMediaDbContext _dbContext;
 
-    public NotificationService(INotificationRepository notificationRepository, IMapper mapper)
+    public NotificationService(
+        INotificationRepository notificationRepository, 
+        IMapper mapper, 
+        SocialMediaDbContext dbContext)
     {
         _notificationRepository = notificationRepository;
         _mapper = mapper;
+        _dbContext = dbContext;
     }
 
     public async Task<List<NotificationDto>> GetUserNotificationsAsync(Guid userId, int page = 1, int pageSize = 20)
@@ -27,83 +36,34 @@ public class NotificationService : INotificationService
         return await _notificationRepository.GetUnreadNotificationsCountAsync(userId);
     }
 
-    public async Task MarkNotificationAsReadAsync(int notificationId, Guid userId)
+    public async Task MarkNotificationAsReadAsync(Guid notificationId, Guid userId)
     {
-        await _notificationRepository.MarkNotificationAsReadAsync(notificationId, userId);
+        var notification = await _notificationRepository.GetByIdAsync(notificationId);
+        if (notification == null )
+            throw new ArgumentException("Notification not found");
+        
+        notification.MarkAsRead();
+        await _dbContext.SaveChangesAsync();
     }
 
     public async Task MarkAllNotificationsAsReadAsync(Guid userId)
     {
-        await _notificationRepository.MarkAllNotificationsAsReadAsync(userId);
+        var notifications = await _notificationRepository.GetUnreadNotificationsByUserAsync(userId);
+        foreach (var notification in notifications)
+            notification.MarkAsRead();
+
+        await _dbContext.SaveChangesAsync();
     }
-
-    public async Task CreateLikeNotificationAsync(Guid actorId, Guid recipientId, int postId)
+    
+    public async Task DeleteNotificationAsync(Guid notificationId, Guid userId)
     {
-        if (actorId == recipientId) return; // Don't notify self
+        var notification = await _notificationRepository.GetNotificationByIdAndRecipientAsync(notificationId, userId);
+        if (notification == null)
+            throw new ArgumentException("Notification not found.");
 
-        await _notificationRepository.CreateNotificationAsync(
-            recipientId, 
-            NotificationType.Like, 
-            "liked your post",
-            $"/posts/{postId}",
-            actorId,
-            postId
-        );
-    }
-
-    public async Task CreateCommentNotificationAsync(Guid actorId, Guid recipientId, int postId, int commentId)
-    {
-        if (actorId == recipientId) return; // Don't notify self
-
-        await _notificationRepository.CreateNotificationAsync(
-            recipientId,
-            NotificationType.Comment,
-            "commented on your post",
-            $"/posts/{postId}#comment-{commentId}",
-            actorId,
-            postId,
-            commentId
-        );
-    }
-
-    public async Task CreateFollowNotificationAsync(Guid actorId, Guid recipientId)
-    {
-        await _notificationRepository.CreateNotificationAsync(
-            recipientId,
-            NotificationType.Follow,
-            "started following you",
-            $"/users/{actorId}",
-            actorId
-        );
-    }
-
-    public async Task CreateCommentLikeNotificationAsync(Guid actorId, Guid recipientId, int commentId)
-    {
-        if (actorId == recipientId) return; // Don't notify self
-
-        await _notificationRepository.CreateNotificationAsync(
-            recipientId,
-            NotificationType.CommentLike,
-            "liked your comment",
-            null, // No specific URL for comment likes
-            actorId,
-            null,
-            commentId
-        );
-    }
-
-    public async Task CreateCommentReplyNotificationAsync(Guid actorId, Guid recipientId, int parentCommentId, int replyId)
-    {
-        if (actorId == recipientId) return; // Don't notify self
-
-        await _notificationRepository.CreateNotificationAsync(
-            recipientId,
-            NotificationType.CommentReply,
-            "replied to your comment",
-            null, // No specific URL for comment replies
-            actorId,
-            null,
-            replyId
-        );
+        notification.SoftDeleteNotification();
+        await _dbContext.SaveChangesAsync();
     }
 }
+    
+    

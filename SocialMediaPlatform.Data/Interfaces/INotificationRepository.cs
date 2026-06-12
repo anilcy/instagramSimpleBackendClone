@@ -10,5 +10,7 @@ public interface INotificationRepository : IGenericRepository<Notification>
 {
     Task<List<Notification>> GetUserNotificationsAsync(Guid userId, int page, int pageSize);
     Task<int> GetUnreadNotificationsCountAsync(Guid userId);
+    Task<Notification?> GetNotificationByIdAndRecipientAsync(Guid notificationId, Guid userId);
+    Task<List<Notification>> GetUnreadNotificationsByUserAsync(Guid userId);
 
 }

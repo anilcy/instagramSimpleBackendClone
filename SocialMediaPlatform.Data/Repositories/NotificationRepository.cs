@@ -32,4 +32,16 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
             .CountAsync(n => n.RecipientId == userId && !n.IsRead);
     }
     
+    public async Task<Notification?> GetNotificationByIdAndRecipientAsync(Guid notificationId, Guid userId)
+    {
+        return await _context.Notifications
+            .FirstOrDefaultAsync(n => n.Id == notificationId && n.RecipientId == userId);
+    }
+
+    public async Task<List<Notification>> GetUnreadNotificationsByUserAsync(Guid userId)
+    {
+        return await _context.Notifications
+            .Where(n => n.RecipientId == userId && !n.IsRead)
+            .ToListAsync();
+    }
 }
