@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using SocialMediaPlatform.Business.Interfaces;
@@ -27,18 +29,21 @@ namespace SocialMediaPlatform.Business.Services
                 return new AuthenticationResult
                 {
                     Success = false,
-                    Errors = new[] { "Bu email ile zaten kayıtlı bir kullanıcı mevcut." }
+                    Errors = new[] { "Invalid email or password." }
                 };
             }
-
-            var newUser = new AppUser
+            
+            var existingUsername = await _userManager.FindByNameAsync(request.Username);
+            if (existingUsername != null)
             {
-                Email = request.Email,
-                UserName = request.Username,
-                FullName = request.FullName,
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
-            };
+                return new AuthenticationResult
+                {
+                    Success = false,
+                    Errors = new[] { "This username is already taken." }
+                };
+            }
+            
+            var newUser = new AppUser(request.Username, request.Email, request.FullName);
 
             var createdUser = await _userManager.CreateAsync(newUser, request.Password);
             
@@ -57,7 +62,11 @@ namespace SocialMediaPlatform.Business.Services
             {
                 Success = true,
                 Token = token,
-                Errors = Array.Empty<string>()
+                Errors = Array.Empty<string>(),
+                Id = newUser.Id,
+                UserName = newUser.UserName!,
+                FullName = newUser.FullName,
+                ProfilePictureUrl = newUser.ProfilePictureUrl
             };
         }
 
@@ -69,7 +78,7 @@ namespace SocialMediaPlatform.Business.Services
                 return new AuthenticationResult
                 {
                     Success = false,
-                    Errors = new[] { "Kullanıcı bulunamadı." }
+                    Errors = new[] { "User not found." }
                 };
             }
 
@@ -79,14 +88,13 @@ namespace SocialMediaPlatform.Business.Services
                 return new AuthenticationResult
                 {
                     Success = false,
-                    Errors = new[] { "Geçersiz şifre." }
+                    Errors = new[] { "Invalid email or password." }
                 };
-            }
-
-            user.LastLoginDate = DateTime.UtcNow;
-            await _userManager.UpdateAsync(user);
+            };
 
             var token = _tokenService.GenerateJwtToken(user);
+            user.UpdateLastLoginDate();
+            await _userManager.UpdateAsync(user);
 
             return new AuthenticationResult
             {

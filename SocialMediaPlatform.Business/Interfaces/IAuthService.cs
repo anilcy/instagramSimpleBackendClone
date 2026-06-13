@@ -1,4 +1,6 @@
+using System.Threading.Tasks;
 using SocialMediaPlatform.Entities.Dtos;
+using SocialMediaPlatform.Entities.Dtos.AuthDtos;
 
 namespace SocialMediaPlatform.Business.Interfaces;
 
