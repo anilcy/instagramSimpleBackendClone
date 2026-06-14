@@ -1,10 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using AutoMapper;
 using SocialMediaPlatform.Business.Interfaces;
 using SocialMediaPlatform.Data.Interfaces;
-using SocialMediaPlatform.Data.Repositories;
-using SocialMediaPlatform.Entities.Dtos;
 using SocialMediaPlatform.Entities.Models;
 using Microsoft.AspNetCore.Identity;
+using SocialMediaPlatform.Data;
+using SocialMediaPlatform.Entities.Dtos.PostDtos;
 
 namespace SocialMediaPlatform.Business.Services
 {
@@ -15,39 +18,33 @@ namespace SocialMediaPlatform.Business.Services
         private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
         private readonly IPrivacyService _privacyService;
+        private readonly SocialMediaDbContext _dbContext;
 
         public PostService(IPostRepository postRepository, 
                            IFileStorageService fileStorageService, 
                            IMapper mapper,
                            UserManager<AppUser> userManager,
-                           IPrivacyService privacyService)
+                           IPrivacyService privacyService,
+                           SocialMediaDbContext dbContext)
         {
             _postRepository = postRepository;
             _fileStorageService = fileStorageService;
             _mapper = mapper;
             _userManager = userManager;
             _privacyService = privacyService;
+            _dbContext = dbContext;
         }
 
         public async Task<PostDto> CreatePostAsync(PostCreateDto dto, Guid userId)
         {
             // Dosya yükleme
             string uploadedImageUrl = await _fileStorageService.UploadFileAsync(dto.ImageFile);
-
-            // Yeni Post oluşturma
-            var post = new Post
-            {
-                Caption = dto.Caption,
-                ImageUrl = uploadedImageUrl,
-                AuthorId = userId,
-                CreatedAt = DateTime.UtcNow,
-                ModifiedAt = DateTime.UtcNow,
-                IsDeleted = false
-            };
-
-            // Repository üzerinden ekleyip kaydediyoruz
-            await _postRepository.InsertAsync(post);
-            await _postRepository.SaveChangesAsync();
+            
+            var post = new Post(userId, dto.Caption);
+            post.MediaItems.Add(Media.ForPost(userId, post.Id, uploadedImageUrl, MediaType.Image));
+            
+            _postRepository.Add(post);
+            await _dbContext.SaveChangesAsync();
 
             // Get user for Author mapping
             var user = await _userManager.FindByIdAsync(userId.ToString());
@@ -112,18 +109,13 @@ namespace SocialMediaPlatform.Business.Services
         }
 
 
-        public async Task<bool> DeletePostAsync(int postId, Guid userId)
+        public async Task<bool> DeletePostAsync(Guid postId, Guid userId)
         {
             var post = await _postRepository.GetPostByIdAndUserAsync(postId, userId);
             if (post == null)
                 return false;
-
-            // Soft delete
-            post.IsDeleted = true;
-            post.DeletedAt = DateTime.UtcNow;
-
-            await _postRepository.UpdateAsync(post);
-            await _postRepository.SaveChangesAsync();
+            
+            _postRepository.SoftDeletePost(post);
 
             return true;
         }

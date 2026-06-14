@@ -22,7 +22,6 @@ public class UserDto
     public int FollowingCount { get; set; }
     
     // Current user's relationship with this user
-    public bool IsFollowing { get; set; }
     public FollowStatus? FollowStatus { get; set; }
 }
 

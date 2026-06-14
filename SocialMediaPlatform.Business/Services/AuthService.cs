@@ -1,15 +1,13 @@
 using System;
 using System.Linq;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 using SocialMediaPlatform.Business.Interfaces;
-using SocialMediaPlatform.Entities.Dtos;
 using SocialMediaPlatform.Entities.Models;
 using System.Threading.Tasks;
 using SocialMediaPlatform.Entities.Dtos.AuthDtos;
 
-namespace SocialMediaPlatform.Business.Services
-{
+namespace SocialMediaPlatform.Business.Services;
+
     public class AuthService : IAuthService
     {
         private readonly UserManager<AppUser> _userManager;
@@ -108,4 +106,4 @@ namespace SocialMediaPlatform.Business.Services
             };
         }
     }
-}
+
