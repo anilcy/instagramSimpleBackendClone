@@ -22,6 +22,4 @@ public class StoryView
     public DateTimeOffset ViewedAt { get; private set; }     
     public Story Story { get; private set; } = null!;
     public AppUser User { get; private set; } = null!;
-
-
 }

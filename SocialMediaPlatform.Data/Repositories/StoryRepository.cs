@@ -68,11 +68,16 @@ public class StoryRepository : GenericRepository<Story>, IStoryRepository
             .AnyAsync(v => v.StoryId == storyId && v.UserId == userId);
     }
 
-    public async Task AddStoryViewAsync(StoryView view)
-    {
-        await _context.StoryViews.AddAsync(view);
+    public void AddStoryView(StoryView view)
+    { 
+        _context.StoryViews.AddAsync(view);
     }
 
+    public void AddStoryLike(StoryLike like)
+    {
+        _context.StoryLikes.Add(like);
+    }
+    
     public async Task<List<StoryView>> GetStoryViewsAsync(Guid storyId,
                                                           int page = 1,
                                                           int pageSize = 50)
@@ -84,5 +89,11 @@ public class StoryRepository : GenericRepository<Story>, IStoryRepository
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
+    }
+    
+    public async Task<StoryLike?> GetStoryLikeAsync(Guid storyId, Guid userId)
+    {
+        return await _context.StoryLikes
+            .FirstOrDefaultAsync(sl => sl.StoryId == storyId && sl.UserId == userId);
     }
 }

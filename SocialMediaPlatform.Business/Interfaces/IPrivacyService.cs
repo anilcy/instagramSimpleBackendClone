@@ -1,4 +1,7 @@
 
+using System;
+using System.Threading.Tasks;
+
 namespace SocialMediaPlatform.Business.Interfaces
 {
     public interface IPrivacyService

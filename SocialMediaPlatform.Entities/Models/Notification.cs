@@ -12,7 +12,8 @@ public enum NotificationType
     FollowAccepted,  // Someone accepted your follow request
     Comment,        // Someone commented on your post
     CommentLike,    // Someone liked your comment
-    CommentReply    // Someone replied to your comment
+    CommentReply,    // Someone replied to your comment
+    StoryLike        // Someone liked your story
 }
 public class Notification
 {
@@ -99,6 +100,14 @@ public class Notification
         notification.ActorId = actorId;
         notification.PostId = postId;
         notification.CommentId = commentId;
+        return notification;
+    }
+    public static Notification StoryLikeNotification(Guid recipientId, Guid actorId, Guid storyId)
+    {
+        var message = "liked your story.";
+        var notification = new Notification(recipientId, NotificationType.StoryLike, message);
+        notification.ActorId = actorId;
+        notification.PostId = storyId; // Reusing PostId for StoryId
         return notification;
     }
     

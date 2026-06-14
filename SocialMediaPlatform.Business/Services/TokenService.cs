@@ -71,7 +71,7 @@ namespace SocialMediaPlatform.Business.Services
             }
             catch
             {
-                return null; // Token geçersiz
+                return null; // Token invalid
             }
         }
     }
