@@ -192,6 +192,11 @@ public class SocialMediaDbContext : IdentityDbContext<AppUser, AppRole, Guid>
                 .WithMany() // no notifications here because we won't use comment.Notifications
                 .HasForeignKey(n => n.CommentId)
                 .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.Story)
+                .WithMany() // no notifications here because we won't use story.Notifications
+                .HasForeignKey(n => n.StoryId)
+                .OnDelete(DeleteBehavior.SetNull);
             
             
             modelBuilder.Entity<Media>()

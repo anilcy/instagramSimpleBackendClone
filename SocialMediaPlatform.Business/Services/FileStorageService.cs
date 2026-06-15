@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+using System.Threading.Tasks;
 using SocialMediaPlatform.Business.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -10,7 +13,7 @@ public class FileStorageService : IFileStorageService
 
     public FileStorageService(IConfiguration configuration)
     {
-        // appsettings.json'dan "UploadsFolder" değeri okunur, yoksa "uploads" klasörü varsayılır.
+        // UploadsFolder is read from appsettings.json. If there is no such key, "uploads" is used as default
         _uploadsFolder = configuration["UploadsFolder"] ?? "uploads";
     }
 
@@ -43,20 +46,20 @@ public class FileStorageService : IFileStorageService
     {
         try
         {
-            // Dosyanın fiziksel yolunu belirle
+            // path of the file to be deleted is determined
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), fileUrl.TrimStart('/'));
 
             if (File.Exists(filePath))
             {
                 File.Delete(filePath);
-                return Task.FromResult(true); // Başarıyla silindi
+                return Task.FromResult(true); // deleted successfully
             }
             
-            return Task.FromResult(false); // Dosya zaten yok
+            return Task.FromResult(false); // no file
         }
         catch
         {
-            return Task.FromResult(false); // Silme başarısız oldu
+            return Task.FromResult(false); // delete unsuccessful
         }
     }
 }

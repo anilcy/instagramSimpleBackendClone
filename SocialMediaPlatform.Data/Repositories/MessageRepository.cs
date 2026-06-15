@@ -57,4 +57,20 @@ public class MessageRepository : GenericRepository<Message>, IMessageRepository
             .CountAsync(m => m.ReceiverId == userId && m.SenderId == fromUserId && !m.IsRead);
     }
     
+    // MessageRepository
+    public async Task<List<Message>> GetUnreadFromUserAsync(Guid userId, Guid fromUserId)
+    {
+        return await _context.Messages
+            .Where(m => m.ReceiverId == userId && m.SenderId == fromUserId && !m.IsRead)
+            .ToListAsync();
+    }
+
+    public async Task<Message?> GetByIdAsync(Guid messageId)
+    {
+        return await _context.Messages
+            .Include(m => m.Sender)
+            .Include(m => m.Receiver)
+            .FirstOrDefaultAsync(m => m.Id == messageId);
+    }
+    
 }

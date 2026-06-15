@@ -107,7 +107,7 @@ public class Notification
         var message = "liked your story.";
         var notification = new Notification(recipientId, NotificationType.StoryLike, message);
         notification.ActorId = actorId;
-        notification.PostId = storyId; // Reusing PostId for StoryId
+        notification.StoryId = storyId;
         return notification;
     }
     
@@ -125,11 +125,12 @@ public class Notification
     public Guid? ActorId { get; private set; }  // User who triggered the notification
     public Guid? PostId { get; private set; }
     public Guid? CommentId { get; private set; }
-    
+    public Guid? StoryId { get; private set; }
     public AppUser Recipient { get; private set; }
     public AppUser? Actor { get; private set; }
     public Post? Post { get; private set; }
     public Comment? Comment { get; private set; }
+    public Story? Story { get; private set; }
     
     public void MarkAsRead()
     {

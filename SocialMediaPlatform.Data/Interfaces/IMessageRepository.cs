@@ -15,5 +15,7 @@ public interface IMessageRepository : IGenericRepository<Message>
 
     // number of unread messages from a specific user
     Task<int> GetUnreadMessagesCountAsync(Guid userId, Guid fromUserId);
-    
+    Task<List<Message>> GetUnreadFromUserAsync(Guid userId, Guid fromUserId);
+    Task<Message?> GetByIdAsync(Guid messageId);
+
 }
