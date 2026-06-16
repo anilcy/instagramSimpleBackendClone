@@ -65,7 +65,7 @@ namespace SocialMediaPlatform.Business.Services
             return _mapper.Map<List<PostDto>>(posts);
         }
 
-        public async Task<PostDto> GetPostByIdAsync(Guid postId, Guid userId)
+        public async Task<PostDto> GetPostByIdAsync(Guid postId)
         {
             var post = await _postRepository.GetPostByIdAsync(postId);
             if (post == null)
