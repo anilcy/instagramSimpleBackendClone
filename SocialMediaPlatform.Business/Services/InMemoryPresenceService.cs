@@ -1,7 +1,10 @@
 // using System.Collections.Concurrent;
 // using SocialMediaPlatform.Business.Interfaces;
 
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using SocialMediaPlatform.Business.Interfaces;
 
 public class InMemoryPresenceService : IPresenceService
@@ -40,7 +43,7 @@ public class InMemoryPresenceService : IPresenceService
         return Task.FromResult(online);
     }
 
-    public Task<DateTime?> GetLastSeenAsync(Guid userId)
+    public Task<DateTimeOffset?> GetLastSeenAsync(Guid userId)
     {
         if (_lastSeen.TryGetValue(userId, out var t)) return Task.FromResult<DateTime?>(t);
         return Task.FromResult<DateTime?>(null);

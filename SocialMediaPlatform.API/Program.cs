@@ -125,6 +125,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPrivacyService, PrivacyService>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IMediaRepository, MediaRepository>();
 
 
 builder.Services.AddIdentityCore<AppUser>(options => { })

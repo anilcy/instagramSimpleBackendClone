@@ -10,7 +10,7 @@ public class SocialMediaDbContext : IdentityDbContext<AppUser, AppRole, Guid>
     public SocialMediaDbContext(DbContextOptions<SocialMediaDbContext> options) : base(options) { }
     public DbSet<Post> Posts => Set<Post>();
     public DbSet<Comment> Comments => Set<Comment>();
-    public DbSet<PostLike> Likes => Set<PostLike>();
+    public DbSet<PostLike> PostLikes => Set<PostLike>();
     public DbSet<CommentLike> CommentLikes => Set<CommentLike>();
     public DbSet<Follow> Follows => Set<Follow>();
     public DbSet<Message> Messages => Set<Message>();
