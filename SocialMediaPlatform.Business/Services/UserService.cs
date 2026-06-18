@@ -98,4 +98,24 @@ public class UserService : IUserService
         user.SetPrivate(isPrivate);
         await _dbContext.SaveChangesAsync();
     }
+    
+    public async Task DeactivateAccountAsync(Guid userId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+            throw new ArgumentException("User not found");
+
+        user.DeactivateAccount();
+        await _dbContext.SaveChangesAsync();
+    }
+    
+    public async Task SoftDeleteAccountAsync(Guid userId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+            throw new ArgumentException("User not found");
+
+        user.SoftDeleteAccount();
+        await _dbContext.SaveChangesAsync();
+    }
 }

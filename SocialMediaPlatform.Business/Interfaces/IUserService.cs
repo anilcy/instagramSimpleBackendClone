@@ -14,4 +14,6 @@ public interface IUserService
     Task<List<UserSummaryDto>> SearchUsersAsync(string searchTerm, int page = 1, int pageSize = 20);
     Task UpdateLastLoginAsync(Guid userId);
     Task SetPrivacyAsync(Guid userId, bool isPrivate);
+    Task DeactivateAccountAsync(Guid userId);
+    Task SoftDeleteAccountAsync(Guid userId);
 }

@@ -18,28 +18,28 @@ public class NotificationsController : BaseController
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<NotificationDto>>> GetNotifications([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetNotifications([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var notifications = await _notificationService.GetUserNotificationsAsync(CurrentUserId, page, pageSize);
         return Ok(notifications);
     }
 
     [HttpGet("unread-count")]
-    public async Task<ActionResult<int>> GetUnreadNotificationsCount()
+    public async Task<IActionResult> GetUnreadNotificationsCount()
     {
         var count = await _notificationService.GetUnreadNotificationsCountAsync(CurrentUserId);
         return Ok(count);
     }
 
     [HttpPut("{notificationId:int}/read")]
-    public async Task<ActionResult> MarkNotificationAsRead(int notificationId)
+    public async Task<IActionResult> MarkNotificationAsRead(Guid notificationId)
     {
         await _notificationService.MarkNotificationAsReadAsync(notificationId, CurrentUserId);
         return NoContent();
     }
 
     [HttpPut("mark-all-read")]
-    public async Task<ActionResult> MarkAllNotificationsAsRead()
+    public async Task<IActionResult> MarkAllNotificationsAsRead()
     {
         await _notificationService.MarkAllNotificationsAsReadAsync(CurrentUserId);
         return NoContent();

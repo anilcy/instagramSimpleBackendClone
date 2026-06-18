@@ -80,7 +80,7 @@ public class FollowService : IFollowService
         return true; 
     }
 
-    public async Task<FollowResponseDto> RespondToFollowRequestAsync(Guid currentUserId, Guid requesterId, FollowStatus status)
+    public async Task<FollowDto> RespondToFollowRequestAsync(Guid currentUserId, Guid requesterId, FollowStatus status)
     {
         var follow = await _followRepository.GetFollowRelationshipAsync(requesterId, currentUserId);
         if (follow == null || follow.Status != FollowStatus.Pending)
@@ -98,13 +98,13 @@ public class FollowService : IFollowService
         }
         
         await _dbContext.SaveChangesAsync();
-        return _mapper.Map<FollowResponseDto>(follow);
+        return _mapper.Map<FollowDto>(follow);
     }
 
-    public async Task<List<FollowRequestDto>> GetFollowRequestsAsync(Guid userId, int page = 1, int pageSize = 20)
+    public async Task<List<FollowDto>> GetFollowRequestsAsync(Guid userId, int page = 1, int pageSize = 20)
     {
         var followRequests = await _followRepository.GetPendingFollowRequestsAsync(userId, page, pageSize);
-        return _mapper.Map<List<FollowRequestDto>>(followRequests);
+        return _mapper.Map<List<FollowDto>>(followRequests);
     }
 
     public async Task<List<FollowDto>> GetFollowersAsync(Guid userId, int page = 1, int pageSize = 20)
@@ -117,21 +117,6 @@ public class FollowService : IFollowService
     {
         var following = await _followRepository.GetFollowingAsync(userId, page, pageSize);
         return _mapper.Map<List<FollowDto>>(following);
-    }
-
-    public async Task<int> GetFollowersCountAsync(Guid userId)
-    {
-        return await _followRepository.GetFollowersCountAsync(userId);
-    }
-
-    public async Task<int> GetFollowingCountAsync(Guid userId)
-    {
-        return await _followRepository.GetFollowingCountAsync(userId);
-    }
-
-    public async Task<bool> IsFollowingAsync(Guid currentUserId, Guid targetUserId)
-    {
-        return await _followRepository.IsFollowingAsync(currentUserId, targetUserId);
     }
 
     public async Task<FollowStatus?> GetFollowStatusAsync(Guid currentUserId, Guid targetUserId)

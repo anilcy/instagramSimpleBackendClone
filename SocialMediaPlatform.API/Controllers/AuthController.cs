@@ -1,6 +1,7 @@
 using SocialMediaPlatform.Business.Interfaces;
 using SocialMediaPlatform.Entities.Dtos;
 using Microsoft.AspNetCore.Authorization;
+using SocialMediaPlatform.Entities.Dtos.AuthDtos;
 
 namespace SocialMediaPlatform.API.Controllers;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +26,7 @@ public class AuthController : BaseController
         {
             return BadRequest(authResponse.Errors);
         }
-        return Ok(new { token = authResponse.Token });
+        return Ok(authResponse);
     }
 
     [HttpPost("login")]
@@ -37,13 +38,6 @@ public class AuthController : BaseController
             return BadRequest(authResponse.Errors);
         }
         return Ok(authResponse);
-    }
-    
-    [Authorize]
-    [HttpGet("test-auth")]
-    public IActionResult TestAuth()
-    {
-        return Ok(new { Message = "Token geçerli!", UserId = CurrentUserId });
     }
 
 }

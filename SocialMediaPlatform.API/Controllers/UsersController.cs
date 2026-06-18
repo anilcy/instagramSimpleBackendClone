@@ -3,6 +3,7 @@ using SocialMediaPlatform.Entities.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using SocialMediaPlatform.Entities.Dtos.UserDtos;
 
 namespace SocialMediaPlatform.API.Controllers;
 
@@ -18,43 +19,64 @@ public class UsersController : BaseController
         _userService = userService;
     }
 
+    [AllowAnonymous]
     [HttpGet("{userId:guid}")]
-    public async Task<ActionResult<UserDto>> GetUserProfile(Guid userId)
+    public async Task<IActionResult> GetUserProfile(Guid userId)
     {
-        var currentUserId = CurrentUserId;
-        var user = await _userService.GetUserProfileAsync(userId, currentUserId);
+        var user = await _userService.GetUserProfileAsync(userId, CurrentUserIdOrNull);
         return Ok(user);
     }
-
+    
+    [AllowAnonymous]
     [HttpGet("username/{userName}")]
-    public async Task<ActionResult<UserDto>> GetUserByUserName(string userName)
+    public async Task<IActionResult> GetUserByUserName(string userName)
     {
-        var currentUserId = CurrentUserId;
-        var user = await _userService.GetUserByUserNameAsync(userName, currentUserId);
+        var user = await _userService.GetUserByUserNameAsync(userName, CurrentUserIdOrNull);
         return Ok(user);
     }
 
     [HttpGet("me")]
-    public async Task<ActionResult<UserDto>> GetMyProfile()
+    public async Task<IActionResult> GetMyProfile()
     {
-        var currentUserId = CurrentUserId;
-        var user = await _userService.GetUserProfileAsync(currentUserId);
+        var user = await _userService.GetUserProfileAsync(CurrentUserId);
         return Ok(user);
     }
 
-    [HttpPut("me")]
-    public async Task<ActionResult<UserDto>> UpdateMyProfile([FromBody] UserProfileUpdateDto userProfileUpdateDto)
+    [HttpPut("me/update-profile")]
+    public async Task<IActionResult> UpdateMyProfile([FromBody] UserProfileUpdateDto userProfileUpdateDto)
     {
-        var currentUserId = CurrentUserId;
-        var user = await _userService.UpdateUserProfileAsync(currentUserId, userProfileUpdateDto);
+        var user = await _userService.UpdateUserProfileAsync(CurrentUserId, userProfileUpdateDto);
         return Ok(user);
     }
 
+    [AllowAnonymous]
     [HttpGet("search")]
-    public async Task<ActionResult<List<UserSummaryDto>>> SearchUsers([FromQuery] string searchTerm, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> SearchUsers([FromQuery] string searchTerm, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var users = await _userService.SearchUsersAsync(searchTerm, page, pageSize);
         return Ok(users);
+    }
+    
+    [HttpPut("me/privacy")]
+    public async Task<IActionResult> SetPrivacy([FromBody] bool isPrivate)
+    {
+        await _userService.SetPrivacyAsync(CurrentUserId, isPrivate);
+        return NoContent();
+    }
+    
+
+    [HttpPost("me/deactivate")]
+    public async Task<IActionResult> DeactivateAccount()
+    {
+        await _userService.DeactivateAccountAsync(CurrentUserId);
+        return NoContent();
+    }
+
+    [HttpDelete("me")]
+    public async Task<IActionResult> DeleteAccount()
+    {
+        await _userService.SoftDeleteAccountAsync(CurrentUserId);
+        return NoContent();
     }
     
 }

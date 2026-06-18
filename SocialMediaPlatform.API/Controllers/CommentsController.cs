@@ -2,6 +2,7 @@ using SocialMediaPlatform.Business.Interfaces;
 using SocialMediaPlatform.Entities.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SocialMediaPlatform.Entities.Dtos.CommentDtos;
 
 namespace SocialMediaPlatform.API.Controllers
 {
@@ -16,21 +17,27 @@ namespace SocialMediaPlatform.API.Controllers
         {
             _commentService = commentService;
         }
-
-        // Yeni yorum ekleme: POST: api/comments
+        
         [HttpPost]
-        public async Task<IActionResult> AddComment([FromBody] CreateCommentDto dto)
+        public async Task<IActionResult> AddComment([FromBody] CommentCreateDto dto)
         {
             var commentDto = await _commentService.AddCommentAsync(dto, CurrentUserId);
             return Ok(commentDto);
         }
-
-        // Belirli bir postun yorumlarını getir: GET: api/comments/{postId}
+        
+        [AllowAnonymous]
         [HttpGet("{postId}")]
-        public async Task<IActionResult> GetComments(int postId)
+        public async Task<IActionResult> GetComments(Guid postId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            var comments = await _commentService.GetCommentsByPostIdAsync(postId);
+            var comments = await _commentService.GetCommentsByPostIdAsync(postId, page, pageSize);
             return Ok(comments);
+        }
+
+        [HttpDelete("{commentId}")]
+        public async Task<IActionResult> DeleteComment(Guid commentId)
+        {
+         await _commentService.DeleteCommentAsync(commentId, CurrentUserId);
+         return NoContent();
         }
     }
 }

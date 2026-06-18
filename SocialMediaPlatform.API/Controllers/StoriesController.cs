@@ -2,6 +2,7 @@ using SocialMediaPlatform.Business.Interfaces;
 using SocialMediaPlatform.Entities.Dtos.Story;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SocialMediaPlatform.Entities.Dtos.StoryDtos;
 
 namespace SocialMediaPlatform.API.Controllers;
 

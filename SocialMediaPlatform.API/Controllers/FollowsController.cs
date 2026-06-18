@@ -4,6 +4,8 @@ using SocialMediaPlatform.Entities.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using SocialMediaPlatform.Entities.Dtos.FollowDtos;
+using SocialMediaPlatform.Entities.Dtos.UserDtos;
 
 namespace SocialMediaPlatform.API.Controllers;
 
@@ -19,19 +21,18 @@ public class FollowsController : BaseController
         _followService = followService;
     }
 
-    [HttpPost]
-    public async Task<ActionResult<FollowDto>> FollowUser([FromBody] FollowActionDto followDto)
+    [HttpPost("{targetUserId}")]
+    public async Task<IActionResult> FollowUser(Guid targetUserId)
     {
-        var currentUserId = CurrentUserId;
-        var follow = await _followService.FollowUserAsync(currentUserId, followDto.TargetUserId);
+        var follow = await _followService.FollowUserAsync(CurrentUserId, targetUserId);
         return Ok(follow);
     }
 
-    [HttpDelete("{targetUserId:guid}")]
-    public async Task<ActionResult> UnfollowUser(Guid targetUserId)
+    [HttpDelete("{targetUserId}")]
+    public async Task<IActionResult> UnfollowUser(Guid targetUserId)
     {
-        var currentUserId = CurrentUserId;
-        var result = await _followService.UnfollowUserAsync(currentUserId, targetUserId);
+
+        var result = await _followService.UnfollowUserAsync(CurrentUserId, targetUserId);
         
         if (result)
             return NoContent();
@@ -39,41 +40,45 @@ public class FollowsController : BaseController
         return NotFound("Follow relationship not found");
     }
 
-    [HttpPost("requests/{requesterId:guid}/respond")]
-    public async Task<ActionResult<FollowResponseDto>> RespondToFollowRequest(Guid requesterId, [FromBody] FollowStatus status)
+    [HttpPost("requests/{requesterId}/accept")]
+    public async Task<IActionResult> AcceptFollowRequest(Guid requesterId)
     {
-        var currentUserId = CurrentUserId;
-        var response = await _followService.RespondToFollowRequestAsync(currentUserId, requesterId, status);
-        return Ok(response);
+        var follow = await _followService.RespondToFollowRequestAsync(CurrentUserId, requesterId, FollowStatus.Accepted);
+        return Ok(follow);
+    }
+
+    [HttpPost("requests/{requesterId}/reject")]
+    public async Task<IActionResult> RejectFollowRequest(Guid requesterId)
+    {
+        var follow = await _followService.RespondToFollowRequestAsync(CurrentUserId, requesterId, FollowStatus.Rejected);
+        return Ok(follow);
     }
 
     [HttpGet("requests")]
-    public async Task<ActionResult<List<FollowRequestDto>>> GetPendingFollowRequests()
+    public async Task<IActionResult> GetPendingFollowRequests([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var currentUserId = CurrentUserId;
-        var requests = await _followService.GetFollowRequestsAsync(currentUserId);
+        var requests = await _followService.GetFollowRequestsAsync(CurrentUserId, page, pageSize);
         return Ok(requests);
     }
 
-    [HttpGet("{userId:guid}/followers")]
-    public async Task<ActionResult<List<UserSummaryDto>>> GetFollowers(Guid userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    [HttpGet("{userId}/followers")]
+    public async Task<IActionResult> GetFollowers(Guid userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var followers = await _followService.GetFollowersAsync(userId, page, pageSize);
         return Ok(followers);
     }
 
-    [HttpGet("{userId:guid}/following")]
-    public async Task<ActionResult<List<UserSummaryDto>>> GetFollowing(Guid userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    [HttpGet("{userId}/following")]
+    public async Task<IActionResult> GetFollowing(Guid userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var following = await _followService.GetFollowingAsync(userId, page, pageSize);
         return Ok(following);
     }
 
-    [HttpGet("{targetUserId:guid}/status")]
-    public async Task<ActionResult<FollowStatus?>> GetFollowStatus(Guid targetUserId)
+    [HttpGet("{targetUserId}/status")]
+    public async Task<IActionResult> GetFollowStatus(Guid targetUserId)
     {
-        var currentUserId = CurrentUserId;
-        var status = await _followService.GetFollowStatusAsync(currentUserId, targetUserId);
+        var status = await _followService.GetFollowStatusAsync(CurrentUserId, targetUserId);
         return Ok(status);
     }
     
