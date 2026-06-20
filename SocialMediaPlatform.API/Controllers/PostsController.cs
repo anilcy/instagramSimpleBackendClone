@@ -1,64 +1,77 @@
-using SocialMediaPlatform.Entities.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SocialMediaPlatform.Business.Interfaces;
+using SocialMediaPlatform.Entities.Dtos.PostDtos;
 
-namespace SocialMediaPlatform.API.Controllers
+namespace SocialMediaPlatform.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class PostsController : BaseController
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    [Authorize]
-    public class PostsController : BaseController
+    private readonly IPostService _postService;
+
+    public PostsController(IPostService postService)
     {
-        private readonly IPostService _postService;
+        _postService = postService;
+    }
 
-        public PostsController(IPostService postService)
-        {
-            _postService = postService;
-        }
+    [HttpPost]
+    public async Task<IActionResult> CreatePost([FromForm] PostCreateDto dto)
+    {
+        var result = await _postService.CreatePostAsync(dto, CurrentUserId);
+        return Ok(result);
+    }
 
-        // POST: api/posts
-        [HttpPost]
-        public async Task<IActionResult> CreatePost([FromForm] PostCreateDto dto)
-        {
-            var result = await _postService.CreatePostAsync(dto, CurrentUserId);
-            return Ok(result);
-        }
- 
-        // GET: api/posts?userId={userId}&page=1&pageSize=20
-        [HttpGet]
-        public async Task<IActionResult> GetPosts([FromQuery] Guid? userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
-        {
-            var currentUserId = CurrentUserId;
-            var targetUserId = userId ?? currentUserId;
-            var posts = await _postService.GetPostsAsync(targetUserId, currentUserId, page, pageSize);
-            return Ok(posts);
-        }
-        // To get the details of a post
-        // GET: api/posts/{id}
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetPostById(int id)
-        {
-            var post = await _postService.GetPostByIdAsync(id, CurrentUserId);
-            return Ok(post);
-        }
+    [AllowAnonymous]
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetUserPosts(Guid userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var posts = await _postService.GetPostsAsync(userId, CurrentUserIdOrNull ?? Guid.Empty, page, pageSize);
+        return Ok(posts);
+    }
 
-        // PUT: api/posts/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePost(int id, [FromForm] PostUpdateDto dto)
-        {
-            var updatedPost = await _postService.UpdatePostAsync(id, dto, CurrentUserId);
-            return Ok(updatedPost);
-        }
+    [HttpGet("feed")]
+    public async Task<IActionResult> GetFeed([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var posts = await _postService.GetFeedAsync(CurrentUserId, page, pageSize);
+        return Ok(posts);
+    }
 
-        // DELETE: api/posts/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePost(int id)
-        {
-            var success = await _postService.DeletePostAsync(id, CurrentUserId);
-            if (!success)
-                return NotFound("Post not found or already deleted.");
-            return Ok("Post deleted successfully.");
-        }
+    [AllowAnonymous]
+    [HttpGet("{postId}")]
+    public async Task<IActionResult> GetPostById(Guid postId)
+    {
+        var post = await _postService.GetPostByIdAsync(postId);
+        return Ok(post);
+    }
+
+    [HttpPut("{postId}")]
+    public async Task<IActionResult> UpdatePost(Guid postId, [FromBody] PostUpdateDto dto)
+    {
+        await _postService.UpdatePostAsync(postId, dto, CurrentUserId);
+        return NoContent();
+    }
+
+    [HttpDelete("{postId}")]
+    public async Task<IActionResult> DeletePost(Guid postId)
+    {
+        await _postService.DeletePostAsync(postId, CurrentUserId);
+        return NoContent();
+    }
+
+    [HttpPost("{postId}/like")]
+    public async Task<IActionResult> LikePost(Guid postId)
+    {
+        await _postService.LikePostAsync(CurrentUserId, postId);
+        return Ok();
+    }
+
+    [HttpDelete("{postId}/like")]
+    public async Task<IActionResult> UnlikePost(Guid postId)
+    {
+        await _postService.UnlikePostAsync(CurrentUserId, postId);
+        return NoContent();
     }
 }

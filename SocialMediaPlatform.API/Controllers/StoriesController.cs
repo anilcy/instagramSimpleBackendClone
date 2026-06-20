@@ -18,63 +18,53 @@ public class StoriesController : BaseController
         _storyService = storyService;
     }
 
-    //Yeni hikâye ekle
     [HttpPost]
-    public async Task<IActionResult> CreateStory([FromBody] StoryCreateDto dto)
+    public async Task<IActionResult> CreateStory([FromForm] IFormFile mediaFile)
     {
-        var story = await _storyService.CreateStoryAsync(CurrentUserId, dto);
-        return CreatedAtAction(nameof(GetStory), new { id = story.Id }, story);
+        var story = await _storyService.CreateStoryAsync(CurrentUserId, mediaFile);
+        return Ok(story);
     }
 
-    //Tek hikâye getir (gerekirse)
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetStory(int id)
-    {
-        // Basit örnek: repo’dan çağırabilirsin
-        return Ok(); // detaylı implement’e şu an gerek yok
-    }
-
-    //Kullanıcının aktif hikâyeleri
-    [HttpGet("user/{userId:guid}")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetUserStories(Guid userId, int page = 1, int pageSize = 20)
+    [HttpGet("user/{userId:guid}")]
+    public async Task<IActionResult> GetUserStories(Guid userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        Guid? requesterId = null;
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            requesterId = CurrentUserId;
-        }
-        try
-        {
-            var stories = await _storyService.GetUserActiveStoriesAsync(userId, requesterId, page, pageSize);
-            return Ok(stories);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Forbid();
-        }
+        var stories = await _storyService.GetUserActiveStoriesAsync(userId, CurrentUserIdOrNull, page, pageSize);
+        return Ok(stories);
     }
 
-    //Takip + kendi feed
     [HttpGet("feed")]
-    public async Task<IActionResult> GetFeed(int page = 1, int pageSize = 20)
+    public async Task<IActionResult> GetFeed([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var stories = await _storyService.GetStoriesFeedAsync(CurrentUserId, page, pageSize);
         return Ok(stories);
     }
 
-    //Hikâyeyi izledim
-    [HttpPost("{id:int}/view")]
-    public async Task<IActionResult> ViewStory(int id)
+    [HttpPost("{storyId:guid}/view")]
+    public async Task<IActionResult> ViewStory(Guid storyId)
     {
-        try
-        {
-            var added = await _storyService.AddStoryViewAsync(id, CurrentUserId);
-            return added ? Ok() : BadRequest("Story already viewed.");
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Forbid();
-        }
+        await _storyService.AddStoryViewAsync(storyId, CurrentUserId);
+        return Ok();
+    }
+
+    [HttpPost("{storyId:guid}/like")]
+    public async Task<IActionResult> LikeStory(Guid storyId)
+    {
+        await _storyService.LikeStoryAsync(CurrentUserId, storyId);
+        return Ok();
+    }
+
+    [HttpDelete("{storyId:guid}/like")]
+    public async Task<IActionResult> UnlikeStory(Guid storyId)
+    {
+        await _storyService.UnlikeStoryAsync(CurrentUserId, storyId);
+        return NoContent();
+    }
+
+    [HttpDelete("{storyId:guid}")]
+    public async Task<IActionResult> DeleteStory(Guid storyId)
+    {
+        await _storyService.DeleteStoryAsync(storyId, CurrentUserId);
+        return NoContent();
     }
 }

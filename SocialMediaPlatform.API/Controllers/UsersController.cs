@@ -20,7 +20,7 @@ public class UsersController : BaseController
     }
 
     [AllowAnonymous]
-    [HttpGet("{userId:guid}")]
+    [HttpGet("{userId}")]
     public async Task<IActionResult> GetUserProfile(Guid userId)
     {
         var user = await _userService.GetUserProfileAsync(userId, CurrentUserIdOrNull);

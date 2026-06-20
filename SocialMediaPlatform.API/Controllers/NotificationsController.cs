@@ -31,7 +31,7 @@ public class NotificationsController : BaseController
         return Ok(count);
     }
 
-    [HttpPut("{notificationId:int}/read")]
+    [HttpPut("{notificationId}/read")]
     public async Task<IActionResult> MarkNotificationAsRead(Guid notificationId)
     {
         await _notificationService.MarkNotificationAsReadAsync(notificationId, CurrentUserId);

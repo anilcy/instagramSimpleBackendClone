@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using SocialMediaPlatform.Business.Interfaces;
 using SocialMediaPlatform.Entities.Dtos;
+using SocialMediaPlatform.Entities.Dtos.MessageDtos;
 
 namespace SocialMediaPlatform.API.Realtime;
 
@@ -61,7 +62,7 @@ public class ChatHub : Hub
 
         var me = GetUserId();
 
-        var dto = new CreateMessageDto
+        var dto = new MessageCreateDto
         {
             ReceiverId = toUserId,
             Content = text
@@ -83,7 +84,7 @@ public class ChatHub : Hub
     public async Task MarkConversationRead(Guid otherUserId)
     {
         var me = GetUserId();
-        await _messages.MarkMessagesAsReadAsync(me, otherUserId);
+        await _messages.MarkConversationAsReadAsync(me, otherUserId);
 
         await Clients.User(otherUserId.ToString())
                      .SendAsync("dm:read:conversation", new
