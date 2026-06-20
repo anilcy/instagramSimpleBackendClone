@@ -11,12 +11,12 @@ namespace SocialMediaPlatform.API.Realtime;
 public class ChatHub : Hub
 {
     private readonly IPresenceService _presence;
-    private readonly IMessageService _messages;
+    private readonly IMessageService _messageService;
 
-    public ChatHub(IPresenceService presence, IMessageService messages)
+    public ChatHub(IPresenceService presence, IMessageService messageService)
     {
         _presence = presence;
-        _messages = messages;
+        _messageService = messageService;
     }
 
     private Guid GetUserId()
@@ -68,7 +68,7 @@ public class ChatHub : Hub
             Content = text
         };
 
-        MessageDto saved = await _messages.SendMessageAsync(me, dto);
+        MessageDto saved = await _messageService.SendMessageAsync(me, dto);
 
         await Clients.User(toUserId.ToString()).SendAsync("dm:new", saved);
         await Clients.User(me.ToString()).SendAsync("dm:sent", saved);
@@ -84,7 +84,7 @@ public class ChatHub : Hub
     public async Task MarkConversationRead(Guid otherUserId)
     {
         var me = GetUserId();
-        await _messages.MarkConversationAsReadAsync(me, otherUserId);
+        await _messageService.MarkConversationAsReadAsync(me, otherUserId);
 
         await Clients.User(otherUserId.ToString())
                      .SendAsync("dm:read:conversation", new
