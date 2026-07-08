@@ -16,18 +16,18 @@ public class MessageService : IMessageService
     private readonly IMessageRepository _messageRepository;
     private readonly INotificationRepository _notificationRepository;
     private readonly IMapper _mapper;
-    private readonly SocialMediaDbContext _dbContext;
+    private readonly IUnitOfWork _unitOfWork;
 
     public MessageService(
         IMessageRepository messageRepository,
         INotificationRepository notificationRepository,
-        IMapper mapper, 
-        SocialMediaDbContext dbContext)
+        IMapper mapper,
+        IUnitOfWork unitOfWork)
     {
         _messageRepository = messageRepository;
         _notificationRepository = notificationRepository;
         _mapper = mapper;
-        _dbContext = dbContext;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<MessageDto> SendMessageAsync(Guid senderId, MessageCreateDto dto)
@@ -38,7 +38,7 @@ public class MessageService : IMessageService
         var notification = Notification.MessageNotification(dto.ReceiverId, senderId);
         _notificationRepository.Add(notification);
         
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<MessageDto>(message);
     }
 
@@ -75,19 +75,19 @@ public class MessageService : IMessageService
         foreach (var message in unread)
             message.MarkAsRead();
 
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
     
     public async Task MarkAsReadAsync(Guid messageId, Guid readerId)
     {
         var message = await _messageRepository.GetByIdAsync(messageId);
-        if (message == null) 
-            throw new ArgumentException("Message is not found");
+        if (message == null)
+            throw new KeyNotFoundException("Message not found.");
         if (message.ReceiverId != readerId)
-            throw new ArgumentException("You can only mark your own messages as read.");
+            throw new UnauthorizedAccessException("You can only mark your own messages as read.");
 
         message.MarkAsRead();   
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
     
     public async Task<int> GetUnreadCountAsync(Guid userId, Guid fromUserId)
@@ -99,23 +99,23 @@ public class MessageService : IMessageService
     {
         var message = await _messageRepository.GetByIdAsync(messageId);
         if (message == null)
-            throw new ArgumentException("Message not found.");
+            throw new KeyNotFoundException("Message not found.");
         if (message.SenderId != userId)
             throw new UnauthorizedAccessException("You can only edit your own messages.");
 
         message.EditMessage(newContent);
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task DeleteMessageAsync(Guid messageId, Guid userId)
     {
         var message = await _messageRepository.GetByIdAsync(messageId);
         if (message == null)
-            throw new ArgumentException("Message not found.");
+            throw new KeyNotFoundException("Message not found.");
         if (message.SenderId != userId)
             throw new UnauthorizedAccessException("You can only delete your own messages.");
 
         message.SoftDeleteMessage();
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 }

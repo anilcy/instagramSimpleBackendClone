@@ -18,7 +18,7 @@ namespace SocialMediaPlatform.Business.Services
         
         public async Task EnsureCanAccessAsync(Guid targetUserId, Guid? requesterId)
         {
-            var user = await _userRepository.GetByIdAsync(targetUserId) ?? throw new ArgumentException("User not found");
+            var user = await _userRepository.GetByIdAsync(targetUserId) ?? throw new KeyNotFoundException("User not found");
             if (!user.IsPrivate)
                 return;
 

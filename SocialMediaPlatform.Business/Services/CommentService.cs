@@ -15,20 +15,20 @@ namespace SocialMediaPlatform.Business.Services
         private readonly ICommentRepository _commentRepository;
         private readonly INotificationRepository _notificationRepository;
         private readonly IPostRepository _postRepository;
-        private readonly SocialMediaDbContext _dbContext;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
         public CommentService
             (ICommentRepository commentRepository, 
              INotificationRepository notificationRepository,
              IPostRepository postRepository,
-             SocialMediaDbContext dbContext,
+             IUnitOfWork unitOfWork,
              IMapper mapper)
         {
             _commentRepository = commentRepository;
             _notificationRepository = notificationRepository;
             _postRepository = postRepository;
-            _dbContext = dbContext;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
@@ -37,7 +37,7 @@ namespace SocialMediaPlatform.Business.Services
             
             var post = await _postRepository.GetByIdAsync(dto.PostId);
             if (post == null)                 // Check the post
-                throw new ArgumentException("Post not found");
+                throw new KeyNotFoundException("Post not found");
 
             Comment? parent = null;
             if (dto.ParentCommentId.HasValue)  // Check the parent comment if it's a reply
@@ -71,7 +71,7 @@ namespace SocialMediaPlatform.Business.Services
                 }
             }
             
-            await _dbContext.SaveChangesAsync(); //dbContext is used for saving both comment and notification in a single transaction
+            await _unitOfWork.SaveChangesAsync(); // single transaction: comment + notification committed together
             return _mapper.Map<CommentDto>(comment);
         }
 
@@ -86,11 +86,11 @@ namespace SocialMediaPlatform.Business.Services
         {
             var comment = await _commentRepository.GetByIdAsync(commentId);
             if (comment == null)
-                throw new ArgumentException("Comment not found");
+                throw new KeyNotFoundException("Comment not found");
             if (comment.AuthorId != userId)
-                throw new ArgumentException("You can only delete your own comments.");
+                throw new UnauthorizedAccessException("You can only delete your own comments.");
             comment.SoftDeleteComment();
-            await _dbContext.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

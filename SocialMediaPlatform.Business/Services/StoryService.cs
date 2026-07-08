@@ -19,22 +19,22 @@ public class StoryService : IStoryService
     private readonly IFileStorageService _fileStorageService;
     private readonly IMapper _mapper;
     private readonly IPrivacyService _privacyService;
-    private readonly SocialMediaDbContext _dbContext;
+    private readonly IUnitOfWork _unitOfWork;
 
     public StoryService(
-        IStoryRepository storyRepository, 
+        IStoryRepository storyRepository,
         INotificationRepository notificationRepository,
         IFileStorageService fileStorageService,
-        IMapper mapper, 
+        IMapper mapper,
         IPrivacyService privacyService,
-        SocialMediaDbContext dbContext)
+        IUnitOfWork unitOfWork)
     {
         _storyRepository = storyRepository;
         _notificationRepository = notificationRepository;
         _fileStorageService = fileStorageService;
         _mapper = mapper;
         _privacyService = privacyService;
-        _dbContext = dbContext;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<StoryDto> CreateStoryAsync(Guid userId, IFormFile mediaFile)
@@ -43,7 +43,7 @@ public class StoryService : IStoryService
         var story = new Story(userId, mediaUrl);
 
         _storyRepository.Add(story);
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         return _mapper.Map<StoryDto>(story);
     }
@@ -66,7 +66,7 @@ public class StoryService : IStoryService
     {
         var story = await _storyRepository.GetStoryAsync(storyId);
         if (story == null)
-            throw new ArgumentException("Story not found.");
+            throw new KeyNotFoundException("Story not found.");
 
         await _privacyService.EnsureCanAccessAsync(story.UserId, viewerId);
         
@@ -76,26 +76,26 @@ public class StoryService : IStoryService
         var view = new StoryView(storyId, viewerId);
 
         _storyRepository.AddStoryView(view);
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
     
     public async Task DeleteStoryAsync(Guid storyId, Guid userId)
     {
         var story = await _storyRepository.GetStoryAsync(storyId);
         if (story == null)
-            throw new ArgumentException("Story not found.");
+            throw new KeyNotFoundException("Story not found.");
         if (story.UserId != userId)
             throw new UnauthorizedAccessException("You can only delete your own stories.");
 
         story.SoftDeleteStory();
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
     
     public async Task LikeStoryAsync(Guid userId, Guid storyId)
     {
         var story = await _storyRepository.GetStoryAsync(storyId);
         if (story == null)
-            throw new ArgumentException("Story not found.");
+            throw new KeyNotFoundException("Story not found.");
 
         await _privacyService.EnsureCanAccessAsync(story.UserId, userId);
 
@@ -112,16 +112,16 @@ public class StoryService : IStoryService
             _notificationRepository.Add(notification);
         }
 
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task UnlikeStoryAsync(Guid userId, Guid storyId)
     {
         var like = await _storyRepository.GetStoryLikeAsync(storyId, userId);
         if (like == null)
-            throw new ArgumentException("Like not found.");
+            throw new KeyNotFoundException("Like not found.");
 
         like.SoftDeleteStoryLike();
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 }

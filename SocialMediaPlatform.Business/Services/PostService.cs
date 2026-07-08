@@ -18,27 +18,24 @@ namespace SocialMediaPlatform.Business.Services
         private readonly IMediaRepository _mediaRepository;
         private readonly INotificationRepository _notificationRepository;
         private readonly IMapper _mapper;
-        private readonly UserManager<AppUser> _userManager;
         private readonly IPrivacyService _privacyService;
-        private readonly SocialMediaDbContext _dbContext;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public PostService(IPostRepository postRepository, 
-                           IFileStorageService fileStorageService, 
+        public PostService(IPostRepository postRepository,
+                           IFileStorageService fileStorageService,
                            IMediaRepository mediaRepository,
                            INotificationRepository notificationRepository,
                            IMapper mapper,
-                           UserManager<AppUser> userManager,
                            IPrivacyService privacyService,
-                           SocialMediaDbContext dbContext)
+                           IUnitOfWork unitOfWork)
         {
             _postRepository = postRepository;
             _fileStorageService = fileStorageService;
             _mediaRepository = mediaRepository;
             _notificationRepository = notificationRepository;
             _mapper = mapper;
-            _userManager = userManager;
             _privacyService = privacyService;
-            _dbContext = dbContext;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<PostDto> CreatePostAsync(PostCreateDto dto, Guid userId)
@@ -54,7 +51,7 @@ namespace SocialMediaPlatform.Business.Services
                 _mediaRepository.Add(media);
             }
           
-            await _dbContext.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
             return _mapper.Map<PostDto>(post);
         }
 
@@ -69,7 +66,7 @@ namespace SocialMediaPlatform.Business.Services
         {
             var post = await _postRepository.GetPostByIdAsync(postId);
             if (post == null)
-                throw new Exception("Post not found.");
+                throw new KeyNotFoundException("Post not found.");
 
             return _mapper.Map<PostDto>(post);
         }
@@ -85,12 +82,12 @@ namespace SocialMediaPlatform.Business.Services
         {
             var post = await _postRepository.GetPostByIdAsync(postId);
             if (post == null)
-                throw new Exception("Post not found.");
+                throw new KeyNotFoundException("Post not found.");
             if (post.AuthorId != userId)
                 throw new UnauthorizedAccessException("You can only edit your own posts.");
             
             post.UpdatePost(dto.Caption);
-            await _dbContext.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
 
 
@@ -98,19 +95,19 @@ namespace SocialMediaPlatform.Business.Services
         {
             var post = await _postRepository.GetPostByIdAsync(postId);
             if (post == null)
-                throw new Exception("Post not found.");
+                throw new KeyNotFoundException("Post not found.");
             if (post.AuthorId != userId)
                 throw new UnauthorizedAccessException("You can only delete your own posts.");
             
             post.SoftDeletePost();
-            await _dbContext.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
         
         public async Task LikePostAsync(Guid userId, Guid postId)
         {
             var post = await _postRepository.GetPostByIdAsync(postId);
             if (post == null)
-                throw new ArgumentException("Post not found.");
+                throw new KeyNotFoundException("Post not found.");
 
             var existingLike = await _postRepository.GetPostLikeAsync(userId, postId);
             if (existingLike != null)
@@ -125,17 +122,17 @@ namespace SocialMediaPlatform.Business.Services
                 _notificationRepository.Add(notification);
             }
 
-            await _dbContext.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task UnlikePostAsync(Guid userId, Guid postId)
         {
             var like = await _postRepository.GetPostLikeAsync(userId, postId);
             if (like == null)
-                throw new ArgumentException("Like not found.");
+                throw new KeyNotFoundException("Like not found.");
 
             like.SoftDeletePostLike();
-            await _dbContext.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

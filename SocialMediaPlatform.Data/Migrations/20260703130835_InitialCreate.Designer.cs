@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SocialMediaPlatform.Data;
@@ -11,9 +12,11 @@ using SocialMediaPlatform.Data;
 namespace SocialMediaPlatform.Data.Migrations
 {
     [DbContext(typeof(SocialMediaDbContext))]
-    partial class SocialMediaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260703130835_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -437,6 +440,9 @@ namespace SocialMediaPlatform.Data.Migrations
                     b.Property<Guid?>("CommentId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("CommentId1")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -467,6 +473,8 @@ namespace SocialMediaPlatform.Data.Migrations
                     b.HasIndex("ActorId");
 
                     b.HasIndex("CommentId");
+
+                    b.HasIndex("CommentId1");
 
                     b.HasIndex("PostId");
 
@@ -768,6 +776,10 @@ namespace SocialMediaPlatform.Data.Migrations
                         .HasForeignKey("CommentId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("SocialMediaPlatform.Entities.Models.Comment", null)
+                        .WithMany("Notifications")
+                        .HasForeignKey("CommentId1");
+
                     b.HasOne("SocialMediaPlatform.Entities.Models.Post", "Post")
                         .WithMany()
                         .HasForeignKey("PostId")
@@ -904,6 +916,8 @@ namespace SocialMediaPlatform.Data.Migrations
             modelBuilder.Entity("SocialMediaPlatform.Entities.Models.Comment", b =>
                 {
                     b.Navigation("Likes");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("Replies");
                 });

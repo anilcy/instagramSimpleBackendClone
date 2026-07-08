@@ -16,20 +16,20 @@ public class FollowService : IFollowService
     private readonly INotificationRepository _notificationRepository;
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
-    private readonly SocialMediaDbContext _dbContext;
+    private readonly IUnitOfWork _unitOfWork;
 
     public FollowService(
-        IFollowRepository followRepository, 
+        IFollowRepository followRepository,
         INotificationRepository notificationRepository,
-        IUserRepository userRepository, 
-        IMapper mapper, 
-        SocialMediaDbContext dbContext)
+        IUserRepository userRepository,
+        IMapper mapper,
+        IUnitOfWork unitOfWork)
     {
         _followRepository = followRepository;
         _notificationRepository = notificationRepository;
         _userRepository = userRepository;
         _mapper = mapper;
-        _dbContext = dbContext;
+        _unitOfWork = unitOfWork;
         
     }
 
@@ -44,7 +44,7 @@ public class FollowService : IFollowService
 
         var targetUser = await _userRepository.GetByIdAsync(targetUserId);
         if (targetUser == null)
-            throw new ArgumentException("Target user not found");
+            throw new KeyNotFoundException("Target user not found");
 
 
         Follow follow;
@@ -65,7 +65,7 @@ public class FollowService : IFollowService
             _notificationRepository.Add(notification);
         }
         
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<FollowDto>(follow);
     }
 
@@ -76,7 +76,7 @@ public class FollowService : IFollowService
             return false;
 
         follow.SoftDeleteFollow();
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return true; 
     }
 
@@ -84,7 +84,7 @@ public class FollowService : IFollowService
     {
         var follow = await _followRepository.GetFollowRelationshipAsync(requesterId, currentUserId);
         if (follow == null || follow.Status != FollowStatus.Pending)
-            throw new ArgumentException("Follow request not found");
+            throw new KeyNotFoundException("Follow request not found");
 
         if (status == FollowStatus.Accepted)
         {
@@ -97,7 +97,7 @@ public class FollowService : IFollowService
             follow.RejectRequest();
         }
         
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<FollowDto>(follow);
     }
 

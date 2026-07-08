@@ -30,17 +30,6 @@ public class PostRepository : GenericRepository<Post>, IPostRepository
             .ToListAsync();
     }
 
-    public async Task<Post?> GetPostByIdAndUserAsync(Guid postId, Guid userId)
-    {
-        return await _context.Posts
-            .Include(p => p.MediaItems)
-            .Include(p => p.Author)
-            .Include(p => p.Comments)
-            .ThenInclude(c => c.Author)
-            .Include(p => p.Likes)
-            .FirstOrDefaultAsync(p => p.Id == postId && p.AuthorId == userId && !p.IsDeleted);
-    }
-
     public async Task<Post?> GetPostByIdAsync(Guid postId)
     {
         return await _context.Posts

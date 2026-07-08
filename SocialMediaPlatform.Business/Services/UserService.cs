@@ -18,23 +18,23 @@ public class UserService : IUserService
     private readonly IFollowRepository _followRepository;
     private readonly IMapper _mapper;
     private readonly UserManager<AppUser> _userManager;
-    private readonly SocialMediaDbContext _dbContext;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UserService(IUserRepository userRepository, IFollowRepository followRepository, 
-                      IMapper mapper, UserManager<AppUser> userManager, SocialMediaDbContext dbContext)
+    public UserService(IUserRepository userRepository, IFollowRepository followRepository,
+                      IMapper mapper, UserManager<AppUser> userManager, IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _followRepository = followRepository;
         _mapper = mapper;
         _userManager = userManager;
-        _dbContext = dbContext;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<UserDto> GetUserProfileAsync(Guid userId, Guid? currentUserId = null)
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
-            throw new ArgumentException("User not found");
+            throw new KeyNotFoundException("User not found");
 
         var userDto = _mapper.Map<UserDto>(user);
         
@@ -57,7 +57,7 @@ public class UserService : IUserService
     {
         var user = await _userRepository.GetUserByUserNameAsync(userName);
         if (user == null)
-            throw new ArgumentException("User not found");
+            throw new KeyNotFoundException("User not found");
 
         return await GetUserProfileAsync(user.Id, currentUserId);
     }
@@ -66,10 +66,11 @@ public class UserService : IUserService
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
-            throw new ArgumentException("User not found");
+            throw new KeyNotFoundException("User not found");
         
         user.UpdateProfile(dto.FullName, null, dto.Bio, dto.WebsiteUrl);
-
+        await _unitOfWork.SaveChangesAsync();
+        
         return await GetUserProfileAsync(userId);
     }
 
@@ -83,39 +84,39 @@ public class UserService : IUserService
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
-            throw new ArgumentException("User not found");
+            throw new KeyNotFoundException("User not found");
 
         user.UpdateLastLoginDate();
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
     
     public async Task SetPrivacyAsync(Guid userId, bool isPrivate)
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
-            throw new ArgumentException("User not found");
+            throw new KeyNotFoundException("User not found");
 
         user.SetPrivate(isPrivate);
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
     
     public async Task DeactivateAccountAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
-            throw new ArgumentException("User not found");
+            throw new KeyNotFoundException("User not found");
 
         user.DeactivateAccount();
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
     
     public async Task SoftDeleteAccountAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
-            throw new ArgumentException("User not found");
+            throw new KeyNotFoundException("User not found");
 
         user.SoftDeleteAccount();
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices.JavaScript;
 
 namespace SocialMediaPlatform.Entities.Models;
 
@@ -47,7 +46,6 @@ public class Comment
         
     public ICollection<Comment> Replies { get; private set; } = new List<Comment>();
     public ICollection<CommentLike> Likes { get; private set; } = new List<CommentLike>();
-    public ICollection<Notification> Notifications { get; private set; } = new List<Notification>();
     
     public void UpdateContent(string newContent)
     {

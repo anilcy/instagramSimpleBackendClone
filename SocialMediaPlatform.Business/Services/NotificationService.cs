@@ -13,16 +13,16 @@ public class NotificationService : INotificationService
 {
     private readonly INotificationRepository _notificationRepository;
     private readonly IMapper _mapper;
-    private readonly SocialMediaDbContext _dbContext;
+    private readonly IUnitOfWork _unitOfWork;
 
     public NotificationService(
-        INotificationRepository notificationRepository, 
-        IMapper mapper, 
-        SocialMediaDbContext dbContext)
+        INotificationRepository notificationRepository,
+        IMapper mapper,
+        IUnitOfWork unitOfWork)
     {
         _notificationRepository = notificationRepository;
         _mapper = mapper;
-        _dbContext = dbContext;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<List<NotificationDto>> GetUserNotificationsAsync(Guid userId, int page = 1, int pageSize = 20)
@@ -40,10 +40,10 @@ public class NotificationService : INotificationService
     {
         var notification = await _notificationRepository.GetByIdAsync(notificationId);
         if (notification == null )
-            throw new ArgumentException("Notification not found");
+            throw new KeyNotFoundException("Notification not found");
         
         notification.MarkAsRead();
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task MarkAllNotificationsAsReadAsync(Guid userId)
@@ -52,17 +52,17 @@ public class NotificationService : INotificationService
         foreach (var notification in notifications)
             notification.MarkAsRead();
 
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
     
     public async Task DeleteNotificationAsync(Guid notificationId, Guid userId)
     {
         var notification = await _notificationRepository.GetNotificationByIdAndRecipientAsync(notificationId, userId);
         if (notification == null)
-            throw new ArgumentException("Notification not found.");
+            throw new KeyNotFoundException("Notification not found.");
 
         notification.SoftDeleteNotification();
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 }
     

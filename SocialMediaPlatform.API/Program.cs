@@ -126,6 +126,7 @@ builder.Services.AddScoped<IPrivacyService, PrivacyService>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IMediaRepository, MediaRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
 builder.Services.AddIdentityCore<AppUser>(options => { })
@@ -223,6 +224,11 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Global exception handling — must be FIRST so it wraps the whole pipeline.
+// (Found via E2E: this middleware existed but was never registered, so every
+// service exception surfaced as a raw 500 instead of the mapped 400/403/404/409.)
+app.UseMiddleware<SocialMediaPlatform.API.Middleware.GlobalExceptionHandlingMiddleware>();
+
 // Apply migrations only in Development
 if (app.Environment.IsDevelopment())
 {
@@ -246,9 +252,11 @@ app.MapHub<ChatHub>("/hubs/chat")
     .RequireAuthorization()
     .RequireCors("SignalRDev");
 
-// PostgreSQL connection test
-using (var conn = new NpgsqlConnection(connectionString))
+// PostgreSQL connection test (skipped under E2E tests: they replace the DbContext
+// connection via DI, but this raw check would still use the .env connection string)
+if (!app.Environment.IsEnvironment("Testing"))
 {
+    using var conn = new NpgsqlConnection(connectionString);
     conn.Open();
     using (var cmd = new NpgsqlCommand("SELECT version()", conn))
     {
@@ -280,3 +288,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+
+// Makes the auto-generated Program class visible to WebApplicationFactory<Program>
+// in the E2E tests ( its a standard pattern for minimal-hosting apps).
+public partial class Program { }

@@ -14,7 +14,9 @@ public class NotificationDto
     
     // Related entities (optional, depending on notification type)
     public UserSummaryDto? Actor { get; set; }  // User who triggered the notification
-    public int? PostId { get; set; }
-    public int? CommentId { get; set; }
+
+    public Guid? PostId { get; set; }
+    public Guid? CommentId { get; set; }
+    public Guid? StoryId { get; set; }
 }
 
