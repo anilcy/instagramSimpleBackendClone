@@ -1,0 +1,59 @@
+name: CI
+
+# Runs on every push to master and on every pull request targeting master.
+# A clean Ubuntu runner checks out the repo from scratch, spins up a real
+# PostgreSQL 17, builds the solution in Release, and runs all 117 tests.
+# If anything is red, the commit/PR is flagged — no more "works on my machine".
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    # A throwaway PostgreSQL the integration + E2E tests connect to. GitHub maps the
+    # container's 5432 to localhost on the runner, so the tests' default host works.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        # Don't start running tests until Postgres is actually accepting connections.
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # These feed IntegrationTestBase and ApiFactory (which read TEST_PG_* with
+    # local defaults). We only override the password to match the service above.
+    env:
+      TEST_PG_HOST: localhost
+      TEST_PG_PORT: "5432"
+      TEST_PG_USER: postgres
+      TEST_PG_PASSWORD: postgres
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build (Release)
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --verbosity normal
